@@ -7,7 +7,7 @@ from sqlalchemy_serializer import SerializerMixin
 from .db_session import SqlAlchemyBase
 
 
-class User(SqlAlchemyBase, UserMixin, SerializerMixin):
+class Items(SqlAlchemyBase, UserMixin, SerializerMixin):
     __tablename__ = 'items'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
