@@ -14,5 +14,6 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+
 if __name__ == '__main__':
     app.run(debug=True, port=8080, host='127.0.0.1')

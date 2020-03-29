@@ -12,6 +12,4 @@ class Items(SqlAlchemyBase, UserMixin, SerializerMixin):
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     user = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))
-
-
-#     дописать какие позиции, когда решим вопрос с апи. таблица имеет вид "акция" - true/false
+    item = sqlalchemy.Column(sqlalchemy.String) #  вводить id валют через -
