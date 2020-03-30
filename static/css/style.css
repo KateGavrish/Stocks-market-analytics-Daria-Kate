@@ -1,0 +1,15 @@
+.currency {
+    color: #cccccc;
+}
+table {
+    width: 50%;
+    margin: auto;
+}
+th {
+    border-bottom: 1px solid #cccccc;
+    text-align: center;
+    padding: 5px 5px 5px 5px;
+}
+td {
+    border-bottom: 1px solid #cccccc;
+}

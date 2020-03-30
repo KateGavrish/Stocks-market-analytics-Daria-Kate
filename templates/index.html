@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<table>
+    <tr>
+        <th>Валюта</th>
+        <th>Курс</th>
+    </tr>
+    {% for item in currency %}
+        <tr>
+            <td><div>{{ item["Nominal"] }} {{ item["Name"] }}</div> <div class="currency">{{ item["CharCode"] }}</div></td>
+            <td>{{ item["Value"] }} ₱</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}
