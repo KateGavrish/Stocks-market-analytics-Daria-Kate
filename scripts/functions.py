@@ -5,7 +5,7 @@ import requests
 
 def xml_to_json(xml_file):
     my_dict = xmltodict.parse(xml_file)
-    json_data = json.dumps(my_dict)
+    json_data = json.loads(json.dumps(my_dict))
     return json_data
 
 
