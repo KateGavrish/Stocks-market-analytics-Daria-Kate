@@ -1,0 +1,557 @@
+{
+  "Valuta": {
+    "@name": "Foreign Currency Market Lib",
+    "Item": [
+      {
+        "@ID": "R01010",
+        "Name": "Австралийский доллар",
+        "EngName": "Australian Dollar",
+        "Nominal": "1",
+        "ParentCode": "R01010",
+        "ISO_Num_Code": "36",
+        "ISO_Char_Code": "AUD"
+      },
+      {
+        "@ID": "R01015",
+        "Name": "Австрийский шиллинг",
+        "EngName": "Austrian Shilling",
+        "Nominal": "1000",
+        "ParentCode": "R01015",
+        "ISO_Num_Code": "40",
+        "ISO_Char_Code": "ATS"
+      },
+      {
+        "@ID": "R01020A",
+        "Name": "Азербайджанский манат",
+        "EngName": "Azerbaijan Manat",
+        "Nominal": "1",
+        "ParentCode": "R01020",
+        "ISO_Num_Code": "944",
+        "ISO_Char_Code": "AZN"
+      },
+      {
+        "@ID": "R01035",
+        "Name": "Фунт стерлингов Соединенного королевства",
+        "EngName": "British Pound Sterling",
+        "Nominal": "1",
+        "ParentCode": "R01035",
+        "ISO_Num_Code": "826",
+        "ISO_Char_Code": "GBP"
+      },
+      {
+        "@ID": "R01040F",
+        "Name": "Ангольская новая кванза",
+        "EngName": "Angolan new Kwanza",
+        "Nominal": "100000",
+        "ParentCode": "R01040",
+        "ISO_Num_Code": "24",
+        "ISO_Char_Code": "AON"
+      },
+      {
+        "@ID": "R01060",
+        "Name": "Армянский драм",
+        "EngName": "Armenia Dram",
+        "Nominal": "1000",
+        "ParentCode": "R01060",
+        "ISO_Num_Code": "51",
+        "ISO_Char_Code": "AMD"
+      },
+      {
+        "@ID": "R01090B",
+        "Name": "Белорусский рубль",
+        "EngName": "Belarussian Ruble",
+        "Nominal": "1",
+        "ParentCode": "R01090",
+        "ISO_Num_Code": "933",
+        "ISO_Char_Code": "BYN"
+      },
+      {
+        "@ID": "R01095",
+        "Name": "Бельгийский франк",
+        "EngName": "Belgium Franc",
+        "Nominal": "1000",
+        "ParentCode": "R01095",
+        "ISO_Num_Code": "56",
+        "ISO_Char_Code": "BEF"
+      },
+      {
+        "@ID": "R01100",
+        "Name": "Болгарский лев",
+        "EngName": "Bulgarian lev",
+        "Nominal": "1",
+        "ParentCode": "R01100",
+        "ISO_Num_Code": "975",
+        "ISO_Char_Code": "BGN"
+      },
+      {
+        "@ID": "R01115",
+        "Name": "Бразильский реал",
+        "EngName": "Brazil Real",
+        "Nominal": "1",
+        "ParentCode": "R01115",
+        "ISO_Num_Code": "986",
+        "ISO_Char_Code": "BRL"
+      },
+      {
+        "@ID": "R01135",
+        "Name": "Венгерский форинт",
+        "EngName": "Hungarian Forint",
+        "Nominal": "100",
+        "ParentCode": "R01135",
+        "ISO_Num_Code": "348",
+        "ISO_Char_Code": "HUF"
+      },
+      {
+        "@ID": "R01200",
+        "Name": "Гонконгский доллар",
+        "EngName": "Hong Kong Dollar",
+        "Nominal": "10",
+        "ParentCode": "R01200",
+        "ISO_Num_Code": "344",
+        "ISO_Char_Code": "HKD"
+      },
+      {
+        "@ID": "R01205",
+        "Name": "Греческая драхма",
+        "EngName": "Greek Drachma",
+        "Nominal": "10000",
+        "ParentCode": "R01205",
+        "ISO_Num_Code": "300",
+        "ISO_Char_Code": "GRD"
+      },
+      {
+        "@ID": "R01215",
+        "Name": "Датская крона",
+        "EngName": "Danish Krone",
+        "Nominal": "10",
+        "ParentCode": "R01215",
+        "ISO_Num_Code": "208",
+        "ISO_Char_Code": "DKK"
+      },
+      {
+        "@ID": "R01235",
+        "Name": "Доллар США",
+        "EngName": "US Dollar",
+        "Nominal": "1",
+        "ParentCode": "R01235",
+        "ISO_Num_Code": "840",
+        "ISO_Char_Code": "USD"
+      },
+      {
+        "@ID": "R01239",
+        "Name": "Евро",
+        "EngName": "Euro",
+        "Nominal": "1",
+        "ParentCode": "R01239",
+        "ISO_Num_Code": "978",
+        "ISO_Char_Code": "EUR"
+      },
+      {
+        "@ID": "R01270",
+        "Name": "Индийская рупия",
+        "EngName": "Indian Rupee",
+        "Nominal": "100",
+        "ParentCode": "R01270",
+        "ISO_Num_Code": "356",
+        "ISO_Char_Code": "INR"
+      },
+      {
+        "@ID": "R01305",
+        "Name": "Ирландский фунт",
+        "EngName": "Irish Pound",
+        "Nominal": "100",
+        "ParentCode": "R01305",
+        "ISO_Num_Code": "372",
+        "ISO_Char_Code": "IEP"
+      },
+      {
+        "@ID": "R01310",
+        "Name": "Исландская крона",
+        "EngName": "Iceland Krona",
+        "Nominal": "10000",
+        "ParentCode": "R01310",
+        "ISO_Num_Code": "352",
+        "ISO_Char_Code": "ISK"
+      },
+      {
+        "@ID": "R01315",
+        "Name": "Испанская песета",
+        "EngName": "Spanish Peseta",
+        "Nominal": "10000",
+        "ParentCode": "R01315",
+        "ISO_Num_Code": "724",
+        "ISO_Char_Code": "ESP"
+      },
+      {
+        "@ID": "R01325",
+        "Name": "Итальянская лира",
+        "EngName": "Italian Lira",
+        "Nominal": "100000",
+        "ParentCode": "R01325",
+        "ISO_Num_Code": "380",
+        "ISO_Char_Code": "ITL"
+      },
+      {
+        "@ID": "R01335",
+        "Name": "Казахстанский тенге",
+        "EngName": "Kazakhstan Tenge",
+        "Nominal": "100",
+        "ParentCode": "R01335",
+        "ISO_Num_Code": "398",
+        "ISO_Char_Code": "KZT"
+      },
+      {
+        "@ID": "R01350",
+        "Name": "Канадский доллар",
+        "EngName": "Canadian Dollar",
+        "Nominal": "1",
+        "ParentCode": "R01350",
+        "ISO_Num_Code": "124",
+        "ISO_Char_Code": "CAD"
+      },
+      {
+        "@ID": "R01370",
+        "Name": "Киргизский сом",
+        "EngName": "Kyrgyzstan Som",
+        "Nominal": "100",
+        "ParentCode": "R01370",
+        "ISO_Num_Code": "417",
+        "ISO_Char_Code": "KGS"
+      },
+      {
+        "@ID": "R01375",
+        "Name": "Китайский юань",
+        "EngName": "China Yuan",
+        "Nominal": "10",
+        "ParentCode": "R01375",
+        "ISO_Num_Code": "156",
+        "ISO_Char_Code": "CNY"
+      },
+      {
+        "@ID": "R01390",
+        "Name": "Кувейтский динар",
+        "EngName": "Kuwaiti Dinar",
+        "Nominal": "10",
+        "ParentCode": "R01390",
+        "ISO_Num_Code": "414",
+        "ISO_Char_Code": "KWD"
+      },
+      {
+        "@ID": "R01405",
+        "Name": "Латвийский лат",
+        "EngName": "Latvian Lat",
+        "Nominal": "1",
+        "ParentCode": "R01405",
+        "ISO_Num_Code": "428",
+        "ISO_Char_Code": "LVL"
+      },
+      {
+        "@ID": "R01420",
+        "Name": "Ливанский фунт",
+        "EngName": "Lebanese Pound",
+        "Nominal": "100000",
+        "ParentCode": "R01420",
+        "ISO_Num_Code": "422",
+        "ISO_Char_Code": "LBP"
+      },
+      {
+        "@ID": "R01435",
+        "Name": "Литовский лит",
+        "EngName": "Lithuanian Lita",
+        "Nominal": "1",
+        "ParentCode": "R01435",
+        "ISO_Num_Code": "440",
+        "ISO_Char_Code": "LTL"
+      },
+      {
+        "@ID": "R01436",
+        "Name": "Литовский талон",
+        "EngName": "Lithuanian talon",
+        "Nominal": "1",
+        "ParentCode": "R01435",
+        "ISO_Num_Code": [],
+        "ISO_Char_Code": []
+      },
+      {
+        "@ID": "R01500",
+        "Name": "Молдавский лей",
+        "EngName": "Moldova Lei",
+        "Nominal": "10",
+        "ParentCode": "R01500",
+        "ISO_Num_Code": "498",
+        "ISO_Char_Code": "MDL"
+      },
+      {
+        "@ID": "R01510",
+        "Name": "Немецкая марка",
+        "EngName": "Deutsche Mark",
+        "Nominal": "1",
+        "ParentCode": "R01510",
+        "ISO_Num_Code": "276",
+        "ISO_Char_Code": "DEM"
+      },
+      {
+        "@ID": "R01510A",
+        "Name": "Немецкая марка",
+        "EngName": "Deutsche Mark",
+        "Nominal": "100",
+        "ParentCode": "R01510",
+        "ISO_Num_Code": "280",
+        "ISO_Char_Code": "DEM"
+      },
+      {
+        "@ID": "R01523",
+        "Name": "Нидерландский гульден",
+        "EngName": "Netherlands Gulden",
+        "Nominal": "100",
+        "ParentCode": "R01523",
+        "ISO_Num_Code": "528",
+        "ISO_Char_Code": "NLG"
+      },
+      {
+        "@ID": "R01535",
+        "Name": "Норвежская крона",
+        "EngName": "Norwegian Krone",
+        "Nominal": "10",
+        "ParentCode": "R01535",
+        "ISO_Num_Code": "578",
+        "ISO_Char_Code": "NOK"
+      },
+      {
+        "@ID": "R01565",
+        "Name": "Польский злотый",
+        "EngName": "Polish Zloty",
+        "Nominal": "1",
+        "ParentCode": "R01565",
+        "ISO_Num_Code": "985",
+        "ISO_Char_Code": "PLN"
+      },
+      {
+        "@ID": "R01570",
+        "Name": "Португальский эскудо",
+        "EngName": "Portuguese Escudo",
+        "Nominal": "10000",
+        "ParentCode": "R01570",
+        "ISO_Num_Code": "620",
+        "ISO_Char_Code": "PTE"
+      },
+      {
+        "@ID": "R01585",
+        "Name": "Румынский лей",
+        "EngName": "Romanian Leu",
+        "Nominal": "10000",
+        "ParentCode": "R01585",
+        "ISO_Num_Code": "642",
+        "ISO_Char_Code": "ROL"
+      },
+      {
+        "@ID": "R01585F",
+        "Name": "Румынский лей",
+        "EngName": "Romanian Leu",
+        "Nominal": "10",
+        "ParentCode": "R01585",
+        "ISO_Num_Code": "946",
+        "ISO_Char_Code": "RON"
+      },
+      {
+        "@ID": "R01589",
+        "Name": "СДР (специальные права заимствования)",
+        "EngName": "SDR",
+        "Nominal": "1",
+        "ParentCode": "R01589",
+        "ISO_Num_Code": "960",
+        "ISO_Char_Code": "XDR"
+      },
+      {
+        "@ID": "R01625",
+        "Name": "Сингапурский доллар",
+        "EngName": "Singapore Dollar",
+        "Nominal": "1",
+        "ParentCode": "R01625",
+        "ISO_Num_Code": "702",
+        "ISO_Char_Code": "SGD"
+      },
+      {
+        "@ID": "R01665A",
+        "Name": "Суринамский доллар",
+        "EngName": "Surinam Dollar",
+        "Nominal": "1",
+        "ParentCode": "R01665",
+        "ISO_Num_Code": "968",
+        "ISO_Char_Code": "SRD"
+      },
+      {
+        "@ID": "R01670",
+        "Name": "Таджикский сомони",
+        "EngName": "Tajikistan Ruble",
+        "Nominal": "10",
+        "ParentCode": "R01670",
+        "ISO_Num_Code": "972",
+        "ISO_Char_Code": "TJS"
+      },
+      {
+        "@ID": "R01670B",
+        "Name": "Таджикский рубл",
+        "EngName": "Tajikistan Ruble",
+        "Nominal": "10",
+        "ParentCode": "R01670",
+        "ISO_Num_Code": "762",
+        "ISO_Char_Code": "TJR"
+      },
+      {
+        "@ID": "R01700J",
+        "Name": "Турецкая лира",
+        "EngName": "Turkish Lira",
+        "Nominal": "1",
+        "ParentCode": "R01700",
+        "ISO_Num_Code": "949",
+        "ISO_Char_Code": "TRY"
+      },
+      {
+        "@ID": "R01710",
+        "Name": "Туркменский манат",
+        "EngName": "Turkmenistan Manat",
+        "Nominal": "10000",
+        "ParentCode": "R01710",
+        "ISO_Num_Code": "795",
+        "ISO_Char_Code": "TMM"
+      },
+      {
+        "@ID": "R01710A",
+        "Name": "Новый туркменский манат",
+        "EngName": "New Turkmenistan Manat",
+        "Nominal": "1",
+        "ParentCode": "R01710",
+        "ISO_Num_Code": "934",
+        "ISO_Char_Code": "TMT"
+      },
+      {
+        "@ID": "R01717",
+        "Name": "Узбекский сум",
+        "EngName": "Uzbekistan Sum",
+        "Nominal": "1000",
+        "ParentCode": "R01717",
+        "ISO_Num_Code": "860",
+        "ISO_Char_Code": "UZS"
+      },
+      {
+        "@ID": "R01720",
+        "Name": "Украинская гривна",
+        "EngName": "Ukrainian Hryvnia",
+        "Nominal": "10",
+        "ParentCode": "R01720",
+        "ISO_Num_Code": "980",
+        "ISO_Char_Code": "UAH"
+      },
+      {
+        "@ID": "R01720A",
+        "Name": "Украинский карбованец",
+        "EngName": "Ukrainian Hryvnia",
+        "Nominal": "1",
+        "ParentCode": "R01720",
+        "ISO_Num_Code": [],
+        "ISO_Char_Code": []
+      },
+      {
+        "@ID": "R01740",
+        "Name": "Финляндская марка",
+        "EngName": "Finnish Marka",
+        "Nominal": "100",
+        "ParentCode": "R01740",
+        "ISO_Num_Code": "246",
+        "ISO_Char_Code": "FIM"
+      },
+      {
+        "@ID": "R01750",
+        "Name": "Французский франк",
+        "EngName": "French Franc",
+        "Nominal": "1000",
+        "ParentCode": "R01750",
+        "ISO_Num_Code": "250",
+        "ISO_Char_Code": "FRF"
+      },
+      {
+        "@ID": "R01760",
+        "Name": "Чешская крона",
+        "EngName": "Czech Koruna",
+        "Nominal": "10",
+        "ParentCode": "R01760",
+        "ISO_Num_Code": "203",
+        "ISO_Char_Code": "CZK"
+      },
+      {
+        "@ID": "R01770",
+        "Name": "Шведская крона",
+        "EngName": "Swedish Krona",
+        "Nominal": "10",
+        "ParentCode": "R01770",
+        "ISO_Num_Code": "752",
+        "ISO_Char_Code": "SEK"
+      },
+      {
+        "@ID": "R01775",
+        "Name": "Швейцарский франк",
+        "EngName": "Swiss Franc",
+        "Nominal": "1",
+        "ParentCode": "R01775",
+        "ISO_Num_Code": "756",
+        "ISO_Char_Code": "CHF"
+      },
+      {
+        "@ID": "R01790",
+        "Name": "ЭКЮ",
+        "EngName": "ECU",
+        "Nominal": "1",
+        "ParentCode": "R01790",
+        "ISO_Num_Code": "954",
+        "ISO_Char_Code": "XEU"
+      },
+      {
+        "@ID": "R01795",
+        "Name": "Эстонская крона",
+        "EngName": "Estonian Kroon",
+        "Nominal": "10",
+        "ParentCode": "R01795",
+        "ISO_Num_Code": "233",
+        "ISO_Char_Code": "EEK"
+      },
+      {
+        "@ID": "R01805",
+        "Name": "Югославский новый динар",
+        "EngName": "Yugoslavian Dinar",
+        "Nominal": "1",
+        "ParentCode": "R01804",
+        "ISO_Num_Code": "890",
+        "ISO_Char_Code": "YUN"
+      },
+      {
+        "@ID": "R01810",
+        "Name": "Южноафриканский рэнд",
+        "EngName": "S.African Rand",
+        "Nominal": "10",
+        "ParentCode": "R01810",
+        "ISO_Num_Code": "710",
+        "ISO_Char_Code": "ZAR"
+      },
+      {
+        "@ID": "R01815",
+        "Name": "Вон Республики Корея",
+        "EngName": "South Korean Won",
+        "Nominal": "1000",
+        "ParentCode": "R01815",
+        "ISO_Num_Code": "410",
+        "ISO_Char_Code": "KRW"
+      },
+      {
+        "@ID": "R01820",
+        "Name": "Японская иена",
+        "EngName": "Japanese Yen",
+        "Nominal": "100",
+        "ParentCode": "R01820",
+        "ISO_Num_Code": "392",
+        "ISO_Char_Code": "JPY"
+      }
+    ]
+  }
+}
+
