@@ -33,7 +33,11 @@ def main_page():
 
 @app.route('/currencies/<code>')
 def currencies_page(code):
-    return data_of_one_curr_for_a_per('12/02/2020', '12/03/2020', from_code_to_id(code))
+    cur_id, name = from_code_to_id(code, True)
+    data = data_of_one_curr_for_a_per('12/02/2020', '15/02/2020', cur_id)["ValCurs"]["Record"]
+    data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
+    print(data)
+    return render_template('currency.html', name=name, cur_data=data)
 
 
 @app.route('/register', methods=['GET', 'POST'])

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <script type="text/javascript">
+      var name = "{{ name }}";
+      var data2 = {{ data|safe }};
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable(data2);
+
+        var options = {
+          title: name,
+          hAxis: {title: 'Year',  titleTextStyle: {color: '#333'}},
+          vAxis: {}
+        };
+
+        var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+    </script>
+    <div id="chart_div" style="width: 100%; height: 500px;"></div>
+{% endblock %}

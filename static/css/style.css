@@ -116,6 +116,6 @@ th {
 td {
     border-bottom: 1px solid #cccccc;
 }
-a:link, a:active, a:visited {
+a.black-link:link, a.black-link:visited, a.black-link:active {
     color: black;
 }
