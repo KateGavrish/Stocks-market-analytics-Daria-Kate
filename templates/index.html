@@ -3,11 +3,13 @@
 {% block content %}
 <table>
     <tr>
+        <th></th>
         <th>Валюта</th>
         <th>Курс</th>
     </tr>
     {% for item in currency %}
         <tr>
+            <td class='{{ item["CharCode"][:2].lower() }}'></td>
             <td><div>{{ item["Nominal"] }} {{ item["Name"] }}</div> <div class="currency">{{ item["CharCode"] }}</div></td>
             <td>{{ item["Value"] }} ₱</td>
         </tr>
