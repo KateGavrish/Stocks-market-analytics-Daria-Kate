@@ -8,6 +8,8 @@ from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 from data.selected_items import Items
 from classes_of_forms import *
+from datetime import datetime
+from scripts.functions import *
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -25,7 +27,17 @@ def load_user(user_id):
 @app.route('/index')
 @app.route('/')
 def main_page():
-    return render_template('base.html')
+    date = str(datetime.now().date().strftime('%d/%m/%Y'))
+    return render_template('index.html', currency=daily_data_of_all(date)["ValCurs"]["Valute"])
+
+
+@app.route('/currencies/<code>')
+def currencies_page(code):
+    cur_id, name = from_code_to_id(code, True)
+    data = data_of_one_curr_for_a_per('12/02/2020', '15/02/2020', cur_id)["ValCurs"]["Record"]
+    data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
+    print(data)
+    return render_template('currency.html', name=name, cur_data=data)
 
 
 @app.route('/register', methods=['GET', 'POST'])

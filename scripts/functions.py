@@ -49,3 +49,17 @@ def from_name_to_id(name):
         if resp['Valuta']['Item'][i]['Name'] == name:
             return resp['Valuta']['Item'][i]['@ID']
     return
+
+
+def from_code_to_id(code, name=False):
+    """По коду возвращает id"""
+
+    with open('static/static_data/code_of_currency_with_iso_char_code.json', 'r', encoding='utf-8-sig') as f:
+        resp = json.loads(f.read())
+    for i in resp['Valuta']['Item']:
+        if i["ISO_Char_Code"] == code:
+            if name:
+                return i['@ID'], i["Name"]
+            else:
+                return i['@ID']
+    return

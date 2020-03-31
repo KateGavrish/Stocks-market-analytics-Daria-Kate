@@ -1,0 +1,121 @@
+.au {
+    background: url("/static/img/flags/au.png") no-repeat 10px;
+}
+.az {
+    background: url("/static/img/flags/az.png") no-repeat 10px;
+}
+.gb {
+    background: url("/static/img/flags/gb.png") no-repeat 10px;
+}
+.am {
+    background: url("/static/img/flags/am.png") no-repeat 10px;
+}
+.by {
+    background: url("/static/img/flags/by.png") no-repeat 10px;
+}
+.bg {
+    background: url("/static/img/flags/bg.png") no-repeat 10px;
+}
+.br {
+    background: url("/static/img/flags/br.png") no-repeat 10px;
+}
+.hu {
+    background: url("/static/img/flags/hu.png") no-repeat 10px;
+}
+.hk {
+    background: url("/static/img/flags/hk.png") no-repeat 10px;
+}
+.dk {
+    background: url("/static/img/flags/dk.png") no-repeat 10px;
+}
+.us {
+    background: url("/static/img/flags/us.png") no-repeat 10px;
+}
+.in {
+    background: url("/static/img/flags/in.png") no-repeat 10px;
+}
+.kz {
+    background: url("/static/img/flags/kz.png") no-repeat 10px;
+}
+.ca {
+    background: url("/static/img/flags/ca.png") no-repeat 10px;
+}
+.kz {
+    background: url("/static/img/flags/kz.png") no-repeat 10px;
+}
+.ca {
+    background: url("/static/img/flags/ca.png") no-repeat 10px;
+}
+.kg {
+    background: url("/static/img/flags/kg.png") no-repeat 10px;
+}
+.cn {
+    background: url("/static/img/flags/cn.png") no-repeat 10px;
+}
+.md {
+    background: url("/static/img/flags/md.png") no-repeat 10px;
+}
+.no {
+    background: url("/static/img/flags/no.png") no-repeat 10px;
+}
+.pl {
+    background: url("/static/img/flags/pl.png") no-repeat 10px;
+}
+.ro {
+    background: url("/static/img/flags/ro.png") no-repeat 10px;
+}
+.sg {
+    background: url("/static/img/flags/sg.png") no-repeat 10px;
+}
+.tj {
+    background: url("/static/img/flags/tj.png") no-repeat 10px;
+}
+.tr {
+    background: url("/static/img/flags/tr.png") no-repeat 10px;
+}
+.tm {
+    background: url("/static/img/flags/tm.png") no-repeat 10px;
+}
+.uz {
+    background: url("/static/img/flags/uz.png") no-repeat 10px;
+}
+.ua {
+    background: url("/static/img/flags/ua.png") no-repeat 10px;
+}
+.cz {
+    background: url("/static/img/flags/cz.png") no-repeat 10px;
+}
+.se {
+    background: url("/static/img/flags/se.png") no-repeat 10px;
+}
+.ch {
+    background: url("/static/img/flags/ch.png") no-repeat 10px;
+}
+.za {
+    background: url("/static/img/flags/za.png") no-repeat 10px;
+}
+.kr {
+    background: url("/static/img/flags/kr.png") no-repeat 10px;
+}
+.jp {
+    background: url("/static/img/flags/jp.png") no-repeat 10px;
+}
+.currency {
+    color: #cccccc;
+}
+table {
+    width: 50%;
+    margin: auto;
+}
+th {
+    border-bottom: 1px solid #cccccc;
+    text-align: center;
+    padding: 5px 5px 5px 5px;
+    min-width: 50px;
+}
+td {
+    border-bottom: 1px solid #cccccc;
+}
+a.black-link:link, a.black-link:visited, a.black-link:active {
+    color: black;
+}
