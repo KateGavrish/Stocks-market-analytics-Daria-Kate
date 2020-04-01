@@ -1,7 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, StringField, PasswordField, BooleanField
+from wtforms import SubmitField, StringField, PasswordField, BooleanField, DateField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
+import datetime
 
 
 class LoginForm(FlaskForm):
@@ -19,3 +20,10 @@ class RegisterForm(FlaskForm):
     surname = StringField('Фамилия пользователя', validators=[DataRequired()])
 
     submit = SubmitField('Войти')
+
+
+class DateForm(FlaskForm):
+    date_to = DateField('finish', validators=[DataRequired()], default=datetime.date.today())
+    date_from = DateField('start', validators=[DataRequired()], default=datetime.date.today() - datetime.timedelta(days=30))
+
+    submit = SubmitField('Загрузить')

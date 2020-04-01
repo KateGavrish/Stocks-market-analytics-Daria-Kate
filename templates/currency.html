@@ -29,7 +29,25 @@
             </p>
         {% endif %}
     </nav>
-    {{ charts.my_chart }}
+    <form action="" method="post" class="date-form">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.date_from(class="form-control", type="date") }}<br>
+            {% for error in form.date_from.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+            {{ form.date_to(class="form-control", type="date") }}<br>
+            {% for error in form.date_to.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endfor %}
+        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        <div class="message">{{ message }}</div>
+    </form>
+    <div class="my-chart1">{{ charts.my_chart }}</div>
     <main role="main" class="container">
         {% block content %}{% endblock %}
     </main>

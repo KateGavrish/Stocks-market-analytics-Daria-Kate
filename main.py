@@ -30,20 +30,32 @@ def main_page():
     return render_template('index.html', currency=daily_data_of_all(date)["ValCurs"]["Valute"])
 
 
-@app.route('/currencies/<code>')
+@app.route('/currencies/<code>', methods=['GET', 'POST'])
 def currencies_page(code):
+    form = DateForm()
+    date_from = form.date_from.data
+    date_to = form.date_to.data
+    message = ""
     cur_id, name = from_code_to_id(code, True)
-    data = data_of_one_curr_for_a_per((datetime.date.today() - datetime.timedelta(days=30)).strftime('%d/%m/%Y'),
-                                      datetime.date.today().strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
-    data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
+    try:
+        data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
+                                          date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
+        data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
+    except Exception:
+        message = "Что-то пошло не так. Попробуйте ввести другую дату"
+        date_to = datetime.date.today()
+        date_from = datetime.date.today() - datetime.timedelta(days=30)
+        data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
+                                          date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
+        data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
 
-    my_chart = LineChart("my_chart", options={'title': name})
+    my_chart = LineChart("my_chart", options={'title': name, 'width': '100%'})
     my_chart.add_column("string", "Дата")
     my_chart.add_column("number", "Цена")
     my_chart.add_rows(data[1:])
     charts.register(my_chart)
 
-    return render_template('currency.html')
+    return render_template('currency.html', form=form, message=message)
 
 
 @app.route('/register', methods=['GET', 'POST'])

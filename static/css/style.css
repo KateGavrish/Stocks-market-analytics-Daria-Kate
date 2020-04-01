@@ -128,3 +128,15 @@ td.delta1 {
 a.black-link:link, a.black-link:visited, a.black-link:active {
     color: black;
 }
+form.date-form {
+    width: 20%;
+    float: right;
+    margin-right: 10px;
+    margin-top: 10px;
+}
+div.my-chart1 {
+    width: 78%;
+}
+div.message {
+    color: red;
+}
