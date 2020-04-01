@@ -35,7 +35,7 @@ def currencies_page(code):
     form = DateForm()
     date_from = form.date_from.data
     date_to = form.date_to.data
-    message = ""
+    message = " "
     cur_id, name = from_code_to_id(code, True)
     try:
         data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
