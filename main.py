@@ -3,10 +3,6 @@ from data import db_session
 from data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user
 from flask_googlecharts import GoogleCharts, LineChart
-from flask_wtf import FlaskForm, Form
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, DateField, SelectField, IntegerField, FieldList, FormField
-from wtforms.fields.html5 import EmailField
-from wtforms.validators import DataRequired
 from data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
@@ -30,14 +26,15 @@ def load_user(user_id):
 @app.route('/index')
 @app.route('/')
 def main_page():
-    date = str(datetime.now().date().strftime('%d/%m/%Y'))
+    date = datetime.date.today().strftime('%d/%m/%Y')
     return render_template('index.html', currency=daily_data_of_all(date)["ValCurs"]["Valute"])
 
 
 @app.route('/currencies/<code>')
 def currencies_page(code):
     cur_id, name = from_code_to_id(code, True)
-    data = data_of_one_curr_for_a_per('12/02/2020', '15/02/2020', cur_id)["ValCurs"]["Record"]
+    data = data_of_one_curr_for_a_per((datetime.date.today() - datetime.timedelta(days=30)).strftime('%d/%m/%Y'),
+                                      datetime.date.today().strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
     data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
 
     my_chart = LineChart("my_chart", options={'title': name})
@@ -80,7 +77,7 @@ def login():
         user = session.query(User).filter(User.email == form.email.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            return redirect("/account")
+            return redirect("/")
         return render_template('login.html', message="Неправильный логин или пароль", form=form)
     else:
         return render_template('login.html', title='Авторизация', form=form)
@@ -95,7 +92,11 @@ def logout():
 
 @app.route('/account', methods=['GET', 'POST'])
 def user_account():
-    return render_template('base.html')
+    date = datetime.date.today().strftime('%d/%m/%Y')
+    params = daily_data_of_all(date)["ValCurs"]["Valute"]
+    list_id_curr = [item["@ID"] for item in params]
+    delta = daily_data_of_all_change(list_id_curr)
+    return render_template('account.html', params=params, delta=delta)
 
 
 if __name__ == '__main__':

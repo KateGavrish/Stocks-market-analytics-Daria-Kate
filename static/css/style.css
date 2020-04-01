@@ -104,17 +104,26 @@
     color: #cccccc;
 }
 table {
-    width: 50%;
+    width: 70%;
     margin: auto;
 }
 th {
     border-bottom: 1px solid #cccccc;
     text-align: center;
-    padding: 5px 5px 5px 5px;
-    min-width: 50px;
+    padding: 5px 20px;
+    min-width: 60px;
 }
 td {
     border-bottom: 1px solid #cccccc;
+}
+td.delta {
+    text-align: center;
+    color: red;
+}
+
+td.delta1 {
+    text-align: center;
+    color: green;
 }
 a.black-link:link, a.black-link:visited, a.black-link:active {
     color: black;

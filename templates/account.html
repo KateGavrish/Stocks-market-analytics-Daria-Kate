@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<a class="btn btn-success" href="/edit_preferences">Редактировать личный кабинет</a>
+<table>
+    <tr>
+        <th></th>
+        <th>Валюта</th>
+        <th>Курс</th>
+        <th>Изменение</th>
+    </tr>
+    {% for item in params %}
+        <tr>
+            <td class='{{ item["CharCode"][:2].lower() }}'></td>
+            <td>
+                <div>
+                    <a href="/currencies/{{ item['CharCode'] }}" class="black-link">{{ item["Nominal"] }} {{ item["Name"] }}</a>
+                </div>
+                <div class="currency">
+                    {{ item["CharCode"] }}
+                </div>
+            </td>
+            <td>{{ item["Value"] }} ₱</td>
+            {% if delta[item['@ID']][0]  == '-' %}
+                <td class="delta">{{ delta[item['@ID']] }} % </td>
+            {% else %}
+                <td class="delta1">{{ delta[item['@ID']] }} % </td>
+            {% endif %}
+        </tr>
+    {% endfor %}
+</table>
+
+
+{% endblock %}
