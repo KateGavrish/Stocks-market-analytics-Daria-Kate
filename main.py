@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, request
 from data import db_session
 from data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user
+from flask_googlecharts import GoogleCharts, LineChart
 from flask_wtf import FlaskForm, Form
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, DateField, SelectField, IntegerField, FieldList, FormField
 from wtforms.fields.html5 import EmailField
@@ -16,6 +17,8 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+charts = GoogleCharts(app)
 
 
 @login_manager.user_loader
@@ -36,8 +39,14 @@ def currencies_page(code):
     cur_id, name = from_code_to_id(code, True)
     data = data_of_one_curr_for_a_per('12/02/2020', '15/02/2020', cur_id)["ValCurs"]["Record"]
     data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
-    print(data)
-    return render_template('currency.html', name=name, cur_data=data)
+
+    my_chart = LineChart("my_chart", options={'title': name})
+    my_chart.add_column("string", "Дата")
+    my_chart.add_column("number", "Цена")
+    my_chart.add_rows(data[1:])
+    charts.register(my_chart)
+
+    return render_template('currency.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
