@@ -17,6 +17,8 @@ login_manager.init_app(app)
 
 charts = GoogleCharts(app)
 
+db_session.global_init("db/user_data.sqlite")
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -67,7 +69,6 @@ def download_file(filename):
 
 @app.route('/register', methods=['GET', 'POST'])
 def reqister():
-    db_session.global_init("db/user_data.sqlite")
     form = RegisterForm()
     if request.method == 'POST' and form.validate_on_submit():
         if form.password.data != form.password_again.data:
