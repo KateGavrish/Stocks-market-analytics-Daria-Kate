@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, send_from_directory
 from data import db_session
 from data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user
@@ -7,6 +7,7 @@ from data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
 from scripts.functions import *
+from scripts.excel_func import create_excel_chart
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -49,6 +50,7 @@ def currencies_page(code):
                                           date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
         data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
 
+    create_excel_chart(name, code, data[1:])  # создание excel-файла
     my_chart = LineChart("my_chart", options={'title': name, 'width': '100%'})
     my_chart.add_column("string", "Дата")
     my_chart.add_column("number", "Цена")
@@ -56,6 +58,11 @@ def currencies_page(code):
     charts.register(my_chart)
 
     return render_template('currency.html', form=form, message=message)
+
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_from_directory('static/excel', filename, as_attachment=True)
 
 
 @app.route('/register', methods=['GET', 'POST'])
