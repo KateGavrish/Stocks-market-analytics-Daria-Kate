@@ -27,3 +27,13 @@ class DateForm(FlaskForm):
     date_from = DateField('start', validators=[DataRequired()], default=datetime.date.today() - datetime.timedelta(days=30))
 
     submit = SubmitField('Загрузить')
+
+
+# class EditPreferencesForm(FlaskForm):
+#     email = StringField('Почта', validators=[DataRequired()])
+#     password = PasswordField('Пароль', validators=[DataRequired()])
+#     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
+#     name = StringField('Имя пользователя', validators=[DataRequired()])
+#     surname = StringField('Фамилия пользователя', validators=[DataRequired()])
+#
+#     submit = SubmitField('Войти')

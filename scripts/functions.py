@@ -14,13 +14,15 @@ def daily_data_of_all_change(list_id_curr):
     dict_of_delta = dict()
     for id_curr in list_id_curr:
 
-        date1 = (datetime.date.today() - datetime.timedelta(days=6)).strftime('%d/%m/%Y')
-        date2 = (datetime.date.today() - datetime.timedelta(days=7)).strftime('%d/%m/%Y')
+        date1 = (datetime.date.today() - datetime.timedelta(days=40)).strftime('%d/%m/%Y')
+        date2 = (datetime.date.today() - datetime.timedelta(days=30)).strftime('%d/%m/%Y')
 
         a = data_of_one_curr_for_a_per(date2, date1, id_curr)
+        print(a)
         try:
             dict_of_delta[id_curr] = str(float(a['ValCurs']['Record'][1]['Value'].replace(',', '.')) * 100 / float(a['ValCurs']['Record'][0]['Value'].replace(',', '.')) - 100)[:5]
-        except Exception:
+        except Exception as e:
+            print(e)
             dict_of_delta[id_curr] = 0
 
     return dict_of_delta
