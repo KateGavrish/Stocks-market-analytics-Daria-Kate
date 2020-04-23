@@ -3,6 +3,7 @@ from data import db_session
 from data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user
 from flask_googlecharts import GoogleCharts, LineChart
+
 from data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
@@ -51,19 +52,25 @@ def currencies_page(code):
         data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
                                           date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
         data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
-
-    create_excel_chart(name, code, data[1:])  # создание excel-файла
+    filename = f'{code}_{date_from}_{date_to}'
     my_chart = LineChart("my_chart", options={'title': name, 'width': '100%'})
     my_chart.add_column("string", "Дата")
     my_chart.add_column("number", "Цена")
     my_chart.add_rows(data[1:])
     charts.register(my_chart)
 
-    return render_template('currency.html', form=form, message=message)
+    return render_template('currency.html', form=form, message=message, name=f"{filename}.xlsx")
 
 
 @app.route('/download/<filename>')
 def download_file(filename):
+    code, date_from, date_to = filename.split('.')[0].split('_')
+    date_to = '/'.join(date_to.split('-')[::-1])
+    date_from = '/'.join(date_from.split('-')[::-1])
+    cur_id, name = from_code_to_id(code, True)
+    data = data_of_one_curr_for_a_per(date_from, date_to, cur_id)["ValCurs"]["Record"]
+    data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
+    create_excel_chart(name, code, data[1:], filename)  # создание excel файла
     return send_from_directory('static/excel', filename, as_attachment=True)
 
 

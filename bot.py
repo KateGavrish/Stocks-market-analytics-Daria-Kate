@@ -5,6 +5,7 @@ from vk_api.utils import get_random_id
 
 from datetime import datetime
 import schedule
+import threading
 
 from config import LOGIN, PASSWORD, TOKEN_VK, GROUP_ID
 from scripts.functions import *
@@ -22,13 +23,6 @@ class MessageError(Exception):
     pass
 
 
-def load_new_data():
-    global data, cur_id
-    date = datetime.date.today().strftime('%d/%m/%Y')
-    data = daily_data_of_all(date)["ValCurs"]["Valute"]
-    cur_id = {i + 1: data[i]["@ID"] for i in range(len(data))}
-
-
 def auth_handler():
     """ При двухфакторной аутентификации вызывается эта функция. """
     key = input("Enter authentication code: ")
@@ -44,7 +38,6 @@ def generate_keyboard(n):
         keyboard.add_line()
         keyboard.add_button('помощь', color=VkKeyboardColor.PRIMARY)
     else:
-        keyboard.add_button('Да', color=VkKeyboardColor.POSITIVE)
         keyboard.add_button('Вернуться в меню', color=VkKeyboardColor.NEGATIVE)
     return keyboard
 
@@ -54,7 +47,7 @@ def new_user(response, vk, uid):
     vk.messages.send(user_id=uid,
                      message=message,
                      random_id=get_random_id())
-    menu()
+    menu(vk, uid)
 
 
 def menu(vk, uid):
@@ -71,7 +64,6 @@ def show_help(vk, uid):
 
 
 def choose_currency(vk, uid):
-    global cur_id, data
     currency = [str(n + 1) + ' ' + flags.get(item["CharCode"][:2], " ") + f'{item["CharCode"]}' for n, item in enumerate(data)]
     vk.messages.send(user_id=uid, message='Выберите валюту\n' + '\n'.join(currency),
                      random_id=get_random_id())
@@ -84,13 +76,33 @@ def check_the_currency_selection(vk, uid, text):
         users_data[uid]['currency'] = cur_id[int(text)]
     except Exception:
         raise MessageError
-    users_data[uid]['currency'] = 3
-    vk.messages.send(user_id=uid, message=f'Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате YY.mm.dd-YY.mm.dd',
+    users_data[uid]['state'] = 4
+    vk.messages.send(user_id=uid, message=f'Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY',
                      random_id=get_random_id())
 
 
+def check_date_selection(vk, uid, text):
+    try:
+        date_from, date_to = text.split('-')
+        data_of_one_curr = data_of_one_curr_for_a_per(date_from, date_to,
+                                                      users_data[uid]['currency'][0])["ValCurs"]["Record"]
+        data_of_one_curr = list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data_of_one_curr))
+    except Exception as s:
+        print(s)
+        raise MessageError
+    name = from_id_to_name(users_data[uid]['currency'][0])
+    code = users_data[uid]['currency'][1]
+    filename = f'{code}_{date_from}_{date_to}'.replace('/', '-') + '.xlsx'
+    create_excel_chart(name, code, data_of_one_curr, filename)
+    users_data[uid]['filename'] = filename
+
+
+def show_chart(vk_session, uid):
+    upload = vk_api.VkUpload(vk_session)
+    print(upload.document_message(users_data[uid]['filename']))
+
+
 def show_all(vk, uid):
-    global data
     message = [flags.get(item["CharCode"][:2], " ") + f'{item["Nominal"]} {item["CharCode"]}' + f' {item["Value"]} ₽'
                for item in data]
     vk.messages.send(user_id=uid, message='текущий курс\n' + '\n'.join(message),
@@ -123,12 +135,13 @@ def main():
                 elif users_data[uid]['state'] == 3:
                     check_the_currency_selection(vk, uid, event.message.text)
                 elif users_data[uid]['state'] == 4:
-                    pass
+                    check_date_selection(vk, uid, event.message.text)
+                    show_chart(vk_session, uid)
                 else:
                     raise MessageError
             except MessageError:
                 keyboard = generate_keyboard(users_data[uid])
-                vk.messages.send(user_id=uid, message='Я тебя не понимаю. Попробуем еще раз?',
+                vk.messages.send(user_id=uid, message='Я тебя не понимаю. Попробуй еще раз или вернись в меню',
                                  random_id=get_random_id(), keyboard=keyboard.get_keyboard())
 
 
@@ -138,9 +151,25 @@ def main():
 # positive — согласиться, подтвердить. #4BB34B
 
 
+def load_new_data():
+    global data, cur_id
+    date = datetime.date.today().strftime('%d/%m/%Y')
+    data = daily_data_of_all(date)["ValCurs"]["Valute"]
+    cur_id = {i + 1: [data[i]["@ID"], data[i]["CharCode"]] for i in range(len(data))}
+
+
+def go():
+    while True:
+        schedule.run_pending()
+
+
+schedule.every().day.at("06:00").do(load_new_data)
+schedule.every().day.at("12:00").do(load_new_data)
+schedule.every().day.at("18:00").do(load_new_data)
+t = threading.Thread(target=go)
+t.start()
+
+
 if __name__ == '__main__':
-    schedule.every().day.at("06:00").do(load_new_data)
-    schedule.every().day.at("12:00").do(load_new_data)
-    schedule.every().day.at("18:00").do(load_new_data)
     load_new_data()
     main()

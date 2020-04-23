@@ -47,9 +47,8 @@ def data_of_one_curr_for_a_per(date_from, date_to, id_curr):
 def from_id_to_name(id):
     """По id возвращает название"""
 
-    with open('static/static_data/code_of_currency.json') as f:
-        score = f.read()
-    resp = json.loads(score)
+    with open('static/static_data/code_of_currency.json', 'r', encoding='utf-8-sig') as f:
+        resp = json.loads(f.read())
     for i in range(len(resp['Valuta']['Item'])):
         if resp['Valuta']['Item'][i]['@ID'] == id:
             return resp['Valuta']['Item'][i]['Name']
