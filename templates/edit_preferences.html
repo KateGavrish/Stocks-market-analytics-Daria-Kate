@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+ {% block content %}
+ <h1>Выберите те позиции, которые вам интересны</h1>
+ <form method="post">
+         {{ form.hidden_tag() }}
+         {{ form.example }}
+         {{ form.submit(type="submit", class="btn btn-primary") }}
+ </form>
+ {% endblock %}

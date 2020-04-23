@@ -82,3 +82,13 @@ def from_code_to_id(code, name=False):
             else:
                 return i['@ID']
     return
+
+
+def list_of_tuples_id_and_name():
+    a = []
+    with open('static/static_data/code_of_currency_with_iso_char_code.json', 'r', encoding='utf-8-sig') as f:
+        resp = json.loads(f.read())
+    for i in resp['Valuta']['Item']:
+        a.append((i['@ID'], i["Name"]))
+
+    return a

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, request, send_from_directory
 from data import db_session
 from data.users import User
-from flask_login import LoginManager, login_user, login_required, logout_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_googlecharts import GoogleCharts, LineChart
 
 from data.selected_items import Items
@@ -118,6 +118,23 @@ def user_account():
     list_id_curr = [item["@ID"] for item in params]
     delta = daily_data_of_all_change(list_id_curr)
     return render_template('account.html', params=params, delta=delta)
+
+@app.route('/edit_preferences', methods=['GET', 'POST'])
+def edit_preferences():
+    form = EditPreferencesForm()
+    if form.validate_on_submit():
+        li = '-'.join(form.example.data)
+        session = db_session.create_session()
+
+        item = Items()
+        item.user = current_user.id
+        item.item = li
+
+        session.add(item)
+        session.commit()
+        return redirect('/account')
+
+    return render_template('edit_preferences.html', form=form)
 
 
 if __name__ == '__main__':
