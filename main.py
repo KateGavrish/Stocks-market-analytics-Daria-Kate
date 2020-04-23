@@ -1,12 +1,14 @@
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, send_from_directory
 from data import db_session
 from data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user
 from flask_googlecharts import GoogleCharts, LineChart
+
 from data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
 from scripts.functions import *
+from scripts.excel_func import create_excel_chart
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -15,6 +17,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 db_session.global_init("db/user_data.sqlite")
 charts = GoogleCharts(app)
+
+db_session.global_init("db/user_data.sqlite")
 
 
 @login_manager.user_loader
@@ -35,7 +39,7 @@ def currencies_page(code):
     form = DateForm()
     date_from = form.date_from.data
     date_to = form.date_to.data
-    message = ""
+    message = " "
     cur_id, name = from_code_to_id(code, True)
     try:
         data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
@@ -49,6 +53,7 @@ def currencies_page(code):
                                           date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
         data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
 
+    create_excel_chart(name, code, data[1:])  # создание excel-файла
     my_chart = LineChart("my_chart", options={'title': name, 'width': '100%'})
     my_chart.add_column("string", "Дата")
     my_chart.add_column("number", "Цена")
@@ -58,9 +63,13 @@ def currencies_page(code):
     return render_template('currency.html', form=form, message=message)
 
 
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_from_directory('static/excel', filename, as_attachment=True)
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def reqister():
-    db_session.global_init("db/user_data.sqlite")
     form = RegisterForm()
     if request.method == 'POST' and form.validate_on_submit():
         if form.password.data != form.password_again.data:
