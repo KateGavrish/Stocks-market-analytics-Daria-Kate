@@ -16,7 +16,7 @@ def create_excel_chart(name, code, data, filename):
 
     # Строим по данным
     chart.add_series(
-        {'values': f'=Sheet1!B2:B{len(values)}', 'categories': f'=Sheet1!A2:A{len(categories)}', 'name': code})
+        {'values': f'=Sheet1!B1:B{len(values)}', 'categories': f'=Sheet1!A1:A{len(categories)}', 'name': code})
     chart.set_title({'name': name})
 
     worksheet.insert_chart('D1', chart)

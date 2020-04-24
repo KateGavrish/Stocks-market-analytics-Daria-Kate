@@ -36,7 +36,8 @@ def generate_keyboard(n):
         keyboard.add_button('текущий курс', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('выбрать валюту', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
-        keyboard.add_button('помощь', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('помощь', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('рассылка', color=VkKeyboardColor.DEFAULT)
     else:
         keyboard.add_button('Вернуться в меню', color=VkKeyboardColor.NEGATIVE)
     return keyboard
@@ -64,7 +65,8 @@ def show_help(vk, uid):
 
 
 def choose_currency(vk, uid):
-    currency = [str(n + 1) + ' ' + flags.get(item["CharCode"][:2], " ") + f'{item["CharCode"]}' for n, item in enumerate(data)]
+    currency = [str(n + 1) + ' ' + flags.get(item["CharCode"][:2], " ") + f'{item["CharCode"]}' for n, item in
+                enumerate(data)]
     vk.messages.send(user_id=uid, message='Выберите валюту\n' + '\n'.join(currency),
                      random_id=get_random_id())
     users_data[uid]['state'] = 3
@@ -77,7 +79,8 @@ def check_the_currency_selection(vk, uid, text):
     except Exception:
         raise MessageError
     users_data[uid]['state'] = 4
-    vk.messages.send(user_id=uid, message=f'Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY',
+    vk.messages.send(user_id=uid,
+                     message=f'Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY',
                      random_id=get_random_id())
 
 
@@ -97,9 +100,13 @@ def check_date_selection(vk, uid, text):
     users_data[uid]['filename'] = filename
 
 
-def show_chart(vk_session, uid):
+def show_chart(vk, vk_session, uid):
     upload = vk_api.VkUpload(vk_session)
-    print(upload.document_message(users_data[uid]['filename']))
+    doc = upload.document_message(f'static/excel/{users_data[uid]["filename"]}', peer_id=uid,
+                                  title=users_data[uid]['filename'])['doc']
+    vk.messages.send(user_id=uid, message='прекрасный выбор', attachment=f'doc{doc["owner_id"]}_{doc["id"]}',
+                     random_id=get_random_id(), keyboard=generate_keyboard(2).get_keyboard())
+    users_data[uid]['state'] = 2
 
 
 def show_all(vk, uid):
@@ -107,6 +114,10 @@ def show_all(vk, uid):
                for item in data]
     vk.messages.send(user_id=uid, message='текущий курс\n' + '\n'.join(message),
                      random_id=get_random_id(), keyboard=generate_keyboard(2).get_keyboard())
+
+
+def mailing():
+    pass
 
 
 def main():
@@ -130,25 +141,26 @@ def main():
                         choose_currency(vk, uid)
                     elif event.message.text.lower() == 'помощь':
                         show_help(vk, uid)
+                    elif event.message.text.lower() == 'рассылка':
+                        mailing()
                     else:
                         raise MessageError
                 elif users_data[uid]['state'] == 3:
                     check_the_currency_selection(vk, uid, event.message.text)
                 elif users_data[uid]['state'] == 4:
                     check_date_selection(vk, uid, event.message.text)
-                    show_chart(vk_session, uid)
+                    show_chart(vk, vk_session, uid)
                 else:
                     raise MessageError
             except MessageError:
                 keyboard = generate_keyboard(users_data[uid])
                 vk.messages.send(user_id=uid, message='Я тебя не понимаю. Попробуй еще раз или вернись в меню',
                                  random_id=get_random_id(), keyboard=keyboard.get_keyboard())
-
-
-# primary — синяя кнопка, обозначает основное действие. #5181B8
-# secondary — обычная белая кнопка. #FFFFFF
-# negative — опасное действие, или отрицательное действие (отклонить, удалить и тд). #E64646
-# positive — согласиться, подтвердить. #4BB34B
+            except Exception as s:
+                print(s)
+                keyboard = generate_keyboard(users_data[uid])
+                vk.messages.send(user_id=uid, message='Что-то пошло не так,но мы все исправим',
+                                 random_id=get_random_id(), keyboard=keyboard.get_keyboard())
 
 
 def load_new_data():
@@ -168,7 +180,6 @@ schedule.every().day.at("12:00").do(load_new_data)
 schedule.every().day.at("18:00").do(load_new_data)
 t = threading.Thread(target=go)
 t.start()
-
 
 if __name__ == '__main__':
     load_new_data()

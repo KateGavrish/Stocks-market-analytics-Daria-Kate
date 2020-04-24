@@ -10,6 +10,12 @@ from datetime import datetime
 from scripts.functions import *
 from scripts.excel_func import create_excel_chart
 
+import schedule
+import threading
+from shutil import rmtree
+from os.path import abspath
+from os import mkdir
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
@@ -124,6 +130,24 @@ def user_account():
     list_id_curr = [item["@ID"] for item in params]
     delta = daily_data_of_all_change(list_id_curr)
     return render_template('account.html', params=params, delta=delta)
+
+
+def go():
+    while True:
+        schedule.run_pending()
+
+
+def clear_excel():
+    try:
+        rmtree(abspath('static/excel'))
+        mkdir('static/excel')
+    except Exception as s:
+        pass
+
+
+schedule.every().hour.at(':00').do(clear_excel)
+t = threading.Thread(target=go)
+t.start()
 
 
 if __name__ == '__main__':
