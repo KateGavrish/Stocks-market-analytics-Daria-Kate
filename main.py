@@ -15,6 +15,7 @@ from scripts.excel_func import create_excel_chart
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 charts = GoogleCharts(app)
@@ -24,7 +25,14 @@ HOST = 'http://127.0.0.1:5000'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return get(f'{HOST}/api/users/load/{user_id}')
+    a = get(f'{HOST}/api/users/{user_id}').json()
+    user = User()
+    user.name = a['users']['name']
+    user.surname = a['users']['surname']
+    user.hashed_password = a['users']['hashed_password']
+    user.email = a['users']['email']
+    user.id = a['users']['id']
+    return user
 
 
 @app.route('/index')
@@ -92,7 +100,13 @@ def login():
     form = LoginForm()
     if request.method == 'POST' and form.validate_on_submit():
         try:
-            user = post(f'{HOST}/api/users/login/{form.email.data}/{form.password.data}')
+            a = get(f'{HOST}/api/users/login/{form.email.data}/{form.password.data}').json()
+            user = User()
+            user.name = a['users']['name']
+            user.surname = a['users']['surname']
+            user.hashed_password = a['users']['hashed_password']
+            user.email = a['users']['email']
+            user.id = a['users']['id']
             login_user(user, remember=form.remember_me.data)
             return redirect("/")
         except Exception as e:
@@ -110,9 +124,12 @@ def logout():
 
 @app.route('/account', methods=['GET', 'POST'])
 def user_account():
-    date = datetime.date.today().strftime('%d/%m/%Y')
-    params = daily_data_of_all(date)["ValCurs"]["Valute"]
+    date = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
     list_id_curr = get(f'{HOST}/api/items_of_user/{current_user.id}')
+    if list_id_curr:
+        params = [x for x in daily_data_of_all(date)["ValCurs"]["Valute"] if x['@ID'] in list_id_curr]
+    else:
+        params = daily_data_of_all(date)["ValCurs"]["Valute"]
     delta = daily_data_of_all_change(list_id_curr)
     return render_template('account.html', params=params, delta=delta)
 
@@ -122,7 +139,6 @@ def edit_preferences():
     form = EditPreferencesForm()
     if form.validate_on_submit():
         li = '-'.join(form.example.data)
-
         post(f'{HOST}/api/items',
              json={
                  'item': li,

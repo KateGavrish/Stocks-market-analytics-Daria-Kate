@@ -16,7 +16,9 @@ parser.add_argument('surname')
 parser.add_argument('email')
 parser.add_argument('password')
 parser.add_argument('item')
-blueprint = flask.Blueprint('news_api', __name__, template_folder='templates')
+parser.add_argument('user_id')
+
+blueprint = flask.Blueprint('main_api', __name__, template_folder='templates')
 
 
 def abort_if_users_not_found(user_id):
@@ -38,7 +40,7 @@ class UsersResource(Resource):
         abort_if_users_not_found(user_id)
         session = create_session()
         user = session.query(User).get(user_id)
-        return jsonify({'users': user.to_dict(only=('name', 'surname', 'email', 'id'))})
+        return jsonify({'users': user.to_dict(only=('name', 'surname', 'email', 'id', 'hashed_password'))})
 
     def delete(self, user_id):
         abort_if_users_not_found(user_id)
@@ -105,13 +107,13 @@ class ItemsListResource(Resource):
         session = create_session()
         item = Items()
         item.item = args['item'],
-        item.user = args['user_id'],
+        item.user = int(args['user_id']),
         session.add(item)
         session.commit()
         return jsonify({'success': 'OK'})
 
 
-@blueprint.route('/api/users/<str:email>',  methods=['GET'])
+@blueprint.route('/api/users/<email>',  methods=['GET'])
 def get_user_email(email):
     session = create_session()
     user = session.query(User).filter(User.email == email).first()
@@ -124,26 +126,32 @@ def get_user_email(email):
     )
 
 
-@blueprint.route('/api/users/login/<str:email>/<str:password>',  methods=['POST'])
+@blueprint.route('/api/users/login/<email>/<password>',  methods=['GET'])
 def user_login(email, password):
     session = create_session()
     user = session.query(User).filter(User.email == email).first()
     if not user:
         return jsonify({'error': 'Not found'})
     if user.check_password(password):
-        return user
+        return jsonify({'users': user.to_dict(only=('name', 'surname', 'email', 'id', 'hashed_password'))})
 
 
 @blueprint.route('/api/users/load/<int:user_id>',  methods=['GET'])
 def load_us(user_id):
     session = create_session()
-    return session.query(User).get(user_id)
+    user = session.query(User).get(user_id)
+    return jsonify(
+        {
+            'users': user.to_dict(only=('name', 'surname', 'email', 'id', 'hashed_password'))
+        }
+    )
 
 
 @blueprint.route('/api/items_of_user/<int:user_id>',  methods=['GET'])
 def load_items(user_id):
     session = create_session()
-    return session.query(Items).filter(Items.user == user_id).first()
+    item = session.query(Items).filter(Items.user == user_id).first()
+    return jsonify({'item': item.to_dict(only=('item', 'user'))})
 
 
 def main():
@@ -152,6 +160,7 @@ def main():
     api.add_resource(UsersResource, '/api/users/<int:user_id>')
     api.add_resource(ItemsListResource, '/api/items')
     api.add_resource(ItemsResource, '/api/items/<int:item_id>')
+    app.register_blueprint(blueprint)
     app.run()
 
 
