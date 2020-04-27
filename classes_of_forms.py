@@ -1,8 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, StringField, PasswordField, BooleanField, DateField
+from wtforms import SubmitField, StringField, PasswordField, BooleanField, DateField, SelectMultipleField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 import datetime
+from scripts.functions import list_of_tuples_id_and_name
+from wtforms.widgets import ListWidget, CheckboxInput
 
 
 class LoginForm(FlaskForm):
@@ -27,3 +29,15 @@ class DateForm(FlaskForm):
     date_from = DateField('start', validators=[DataRequired()], default=datetime.date.today() - datetime.timedelta(days=30))
 
     submit = SubmitField('Загрузить')
+
+
+class MultiCheckboxField(SelectMultipleField):
+    widget = ListWidget(prefix_label=False)
+    option_widget = CheckboxInput()
+
+
+class EditPreferencesForm(FlaskForm):
+    files = list_of_tuples_id_and_name()
+    example = MultiCheckboxField('Label', choices=files)
+
+    submit = SubmitField('Сохранить')

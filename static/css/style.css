@@ -140,6 +140,17 @@ div.my-chart1 {
 div.message {
     color: red;
 }
-.a-margin {
-    margin-left: 10px;
-}
+
+
+form #example {
+     list-style-type: none;
+ }
+
+ form #example li {
+     display: block;
+     width: 33%;
+     float: left;
+ }
+ main.container {
+
+ }

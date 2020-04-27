@@ -1,7 +1,9 @@
 from flask import Flask, render_template, redirect, request, send_from_directory
+from requests import get, post
+
 from data import db_session
 from data.users import User
-from flask_login import LoginManager, login_user, login_required, logout_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_googlecharts import GoogleCharts, LineChart
 
 from data.selected_items import Items
@@ -19,18 +21,24 @@ from os import mkdir
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
+
 login_manager = LoginManager()
 login_manager.init_app(app)
-
 charts = GoogleCharts(app)
 
-db_session.global_init("db/user_data.sqlite")
+HOST = 'http://127.0.0.1:5000'
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    session = db_session.create_session()
-    return session.query(User).get(user_id)
+    a = get(f'{HOST}/api/users/{user_id}').json()
+    user = User()
+    user.name = a['users']['name']
+    user.surname = a['users']['surname']
+    user.hashed_password = a['users']['hashed_password']
+    user.email = a['users']['email']
+    user.id = a['users']['id']
+    return user
 
 
 @app.route('/index')
@@ -86,17 +94,14 @@ def reqister():
     if request.method == 'POST' and form.validate_on_submit():
         if form.password.data != form.password_again.data:
             return render_template('register.html', title='Регистрация', form=form, message="Пароли не совпадают")
-        session = db_session.create_session()
-        if session.query(User).filter(User.email == form.email.data).first():
+        if get(f'{HOST}/api/users/{form.email.data}'):
             return render_template('register.html', title='Регистрация', form=form,
                                    message="Такой пользователь уже есть")
-        user = User()
-        user.name = form.name.data
-        user.surname = form.surname.data
-        user.email = form.email.data
-        user.set_password(form.password.data)
-        session.add(user)
-        session.commit()
+        post(f'{HOST}/api/users',
+             json={'name': form.name.data,
+                   'surname': form.surname.data,
+                   'email': form.email.data,
+                   'password': form.password.data}).json()
 
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
@@ -106,12 +111,18 @@ def reqister():
 def login():
     form = LoginForm()
     if request.method == 'POST' and form.validate_on_submit():
-        session = db_session.create_session()
-        user = session.query(User).filter(User.email == form.email.data).first()
-        if user and user.check_password(form.password.data):
+        try:
+            a = get(f'{HOST}/api/users/login/{form.email.data}/{form.password.data}').json()
+            user = User()
+            user.name = a['users']['name']
+            user.surname = a['users']['surname']
+            user.hashed_password = a['users']['hashed_password']
+            user.email = a['users']['email']
+            user.id = a['users']['id']
             login_user(user, remember=form.remember_me.data)
             return redirect("/")
-        return render_template('login.html', message="Неправильный логин или пароль", form=form)
+        except Exception as e:
+            return render_template('login.html', message=e, form=form)
     else:
         return render_template('login.html', title='Авторизация', form=form)
 
@@ -125,11 +136,30 @@ def logout():
 
 @app.route('/account', methods=['GET', 'POST'])
 def user_account():
-    date = datetime.date.today().strftime('%d/%m/%Y')
-    params = daily_data_of_all(date)["ValCurs"]["Valute"]
-    list_id_curr = [item["@ID"] for item in params]
+    date = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
+    list_id_curr = get(f'{HOST}/api/items_of_user/{current_user.id}')
+    if list_id_curr:
+        params = [x for x in daily_data_of_all(date)["ValCurs"]["Valute"] if x['@ID'] in list_id_curr]
+    else:
+        params = daily_data_of_all(date)["ValCurs"]["Valute"]
     delta = daily_data_of_all_change(list_id_curr)
     return render_template('account.html', params=params, delta=delta)
+
+
+@app.route('/edit_preferences', methods=['GET', 'POST'])
+def edit_preferences():
+    form = EditPreferencesForm()
+    if form.validate_on_submit():
+        li = '-'.join(form.example.data)
+        post(f'{HOST}/api/items',
+             json={
+                 'item': li,
+                 'user_id': current_user.id
+             })
+
+        return redirect('/account')
+
+    return render_template('edit_preferences.html', form=form)
 
 
 def go():

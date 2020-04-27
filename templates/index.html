@@ -8,11 +8,18 @@
         <th>Курс</th>
     </tr>
     {% for item in currency %}
-        <tr>
-            <td class='{{ item["CharCode"][:2].lower() }}'></td>
-            <td><div><a href="/currencies/{{ item['CharCode'] }}" class="black-link">{{ item["Nominal"] }} {{ item["Name"] }}</a></div> <div class="currency">{{ item["CharCode"] }}</div></td>
-            <td>{{ item["Value"] }} ₽</td>
-        </tr>
-    {% endfor %}
+         <tr>
+             <td class='{{ item["CharCode"][:2].lower() }}'></td>
+             <td>
+                 <div>
+                     <a href="/currencies/{{ item['CharCode'] }}" class="black-link">{{ item["Nominal"] }} {{ item["Name"] }}</a>
+                 </div>
+                 <div class="currency">
+                     {{ item["CharCode"] }}
+                 </div>
+             </td>
+             <td>{{ item["Value"] }} ₱</td>
+         </tr>
+     {% endfor %}
 </table>
 {% endblock %}

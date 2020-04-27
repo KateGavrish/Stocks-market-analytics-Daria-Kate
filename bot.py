@@ -38,8 +38,13 @@ def generate_keyboard(n):
         keyboard.add_line()
         keyboard.add_button('помощь', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('рассылка', color=VkKeyboardColor.DEFAULT)
+    elif n == 5:
+        keyboard.add_button('неделя', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('день', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_line()
+        keyboard.add_button('вернуться в меню', color=VkKeyboardColor.DEFAULT)
     else:
-        keyboard.add_button('Вернуться в меню', color=VkKeyboardColor.NEGATIVE)
+        keyboard.add_button('Вернуться в меню', color=VkKeyboardColor.DEFAULT)
     return keyboard
 
 
@@ -116,8 +121,47 @@ def show_all(vk, uid):
                      random_id=get_random_id(), keyboard=generate_keyboard(2).get_keyboard())
 
 
-def mailing():
-    pass
+def mailing(vk, uid):
+    message = [str(n + 1) + ' ' + flags.get(item["CharCode"][:2], " ") + f'{item["CharCode"]}' for n, item in
+               enumerate(data)]
+    vk.messages.send(user_id=uid, message='Об изменении курса какой валюты вам сообщить?\n' + '\n'.join(message) + '\nвведите номер валюты в списке',
+                     random_id=get_random_id(), keyboard=generate_keyboard(0).get_keyboard())
+    users_data[uid]["state"] = 5
+
+
+def mailing_check_number(vk, uid, text):
+    text = text.rstrip().lstrip()
+    try:
+        users_data[uid]['temporary'] = {}
+        users_data[uid]['temporary']['currency'] = cur_id[int(text)]
+    except Exception:
+        raise MessageError
+    vk.messages.send(user_id=uid, message="Изменение за какой период следует отслеживать?",
+                     random_id=get_random_id(), keyboard=generate_keyboard(5).get_keyboard())
+    users_data[uid]["state"] = 6
+
+
+def mailing_period(vk, uid, text):
+    d = {'день': 'day', 'неделя': 'week'}
+    text = text.lstrip().rstrip()
+    try:
+        users_data[uid]['temporary']['period'] = d[text]
+    except Exception:
+        raise MessageError
+    vk.messages.send(user_id=uid, message="Я сообщу вам, когда курс валюты изменится на р% \n введите р в формате '+р' или '-р'",
+                     random_id=get_random_id(), keyboard=generate_keyboard(0).get_keyboard())
+    users_data[uid]["state"] = 7
+
+
+def mailing_percent(vk, uid, text):
+    text = text.lstrip().rstrip()
+    try:
+        users_data[uid]['temporary']['percent'] = float(text)
+    except Exception:
+        raise MessageError
+    vk.messages.send(user_id=uid,
+                     message="",
+                     random_id=get_random_id(), keyboard=generate_keyboard(7).get_keyboard())
 
 
 def main():
@@ -142,7 +186,7 @@ def main():
                     elif event.message.text.lower() == 'помощь':
                         show_help(vk, uid)
                     elif event.message.text.lower() == 'рассылка':
-                        mailing()
+                        mailing(vk, uid)
                     else:
                         raise MessageError
                 elif users_data[uid]['state'] == 3:
@@ -150,6 +194,12 @@ def main():
                 elif users_data[uid]['state'] == 4:
                     check_date_selection(vk, uid, event.message.text)
                     show_chart(vk, vk_session, uid)
+                elif users_data[uid]['state'] == 5:
+                    mailing_check_number(vk, uid, event.message.text)
+                elif users_data[uid]['state'] == 6:
+                    mailing_period(vk, uid, event.message.text)
+                elif users_data[uid]['state'] == 7:
+                    mailing_percent(vk, uid, event.message.text)
                 else:
                     raise MessageError
             except MessageError:

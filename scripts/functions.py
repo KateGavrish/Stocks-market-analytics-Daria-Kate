@@ -14,13 +14,14 @@ def daily_data_of_all_change(list_id_curr):
     dict_of_delta = dict()
     for id_curr in list_id_curr:
 
-        date1 = (datetime.date.today() - datetime.timedelta(days=6)).strftime('%d/%m/%Y')
-        date2 = (datetime.date.today() - datetime.timedelta(days=7)).strftime('%d/%m/%Y')
+        date1 = (datetime.date.today() - datetime.timedelta(days=40)).strftime('%d/%m/%Y')
+        date2 = (datetime.date.today() - datetime.timedelta(days=30)).strftime('%d/%m/%Y')
 
         a = data_of_one_curr_for_a_per(date2, date1, id_curr)
         try:
             dict_of_delta[id_curr] = str(float(a['ValCurs']['Record'][1]['Value'].replace(',', '.')) * 100 / float(a['ValCurs']['Record'][0]['Value'].replace(',', '.')) - 100)[:5]
-        except Exception:
+        except Exception as e:
+            print(e)
             dict_of_delta[id_curr] = 0
 
     return dict_of_delta
@@ -79,3 +80,13 @@ def from_code_to_id(code, name=False):
             else:
                 return i['@ID']
     return
+
+
+def list_of_tuples_id_and_name():
+    a = []
+    with open('static/static_data/code_of_currency_with_iso_char_code.json', 'r', encoding='utf-8-sig') as f:
+        resp = json.loads(f.read())
+    for i in resp['Valuta']['Item']:
+        a.append((i['@ID'], i["Name"]))
+
+    return a
