@@ -25,30 +25,35 @@ def abort_if_users_not_found(user_id):
     session = create_session()
     user = session.query(User).get(user_id)
     if not user:
-        jsonify(message=f"User {user_id} not found")
+        return 'NO'
+    return 'OK'
 
 
 def abort_if_items_not_found(item_id):
     session = create_session()
     user = session.query(User).get(item_id)
     if not user:
-        jsonify(message=f"Item {item_id} not found")
+        return 'NO'
+    return 'OK'
 
 
 class UsersResource(Resource):
     def get(self, user_id):
-        abort_if_users_not_found(user_id)
-        session = create_session()
-        user = session.query(User).get(user_id)
-        return jsonify({'users': user.to_dict(only=('name', 'surname', 'email', 'id', 'hashed_password'))})
+        a = abort_if_users_not_found(user_id)
+        if a == 'OK':
+            session = create_session()
+            user = session.query(User).get(user_id)
+            return jsonify({'users': user.to_dict(only=('name', 'surname', 'email', 'id', 'hashed_password'))})
+        return jsonify({'success': 'NO'})
 
     def delete(self, user_id):
-        abort_if_users_not_found(user_id)
-        session = create_session()
-        user = session.query(User).get(user_id)
-        session.delete(user)
-        session.commit()
-        return jsonify({'success': 'OK'})
+        a = abort_if_users_not_found(user_id)
+        if a == 'OK':
+            session = create_session()
+            user = session.query(User).get(user_id)
+            session.delete(user)
+            session.commit()
+            return jsonify({'success': 'OK'})
 
 
 class UsersListResource(Resource):
@@ -73,13 +78,15 @@ class UsersListResource(Resource):
 
 class ItemsResource(Resource):
     def get(self, item_id):
-        abort_if_items_not_found(item_id)
-        session = create_session()
-        item = session.query(Items).get(item_id)
-        return jsonify({'item': item.to_dict(only=('item', 'user'))})
+        a = abort_if_items_not_found(item_id)
+        if a == 'OK':
+            session = create_session()
+            item = session.query(Items).get(item_id)
+            return jsonify({'item': item.to_dict(only=('item', 'user'))})
+        return jsonify({'success': 'NO'})
 
     def delete(self, item_id):
-        abort_if_items_not_found(item_id)
+        abort_if_items_not_found(item_id).json()
         session = create_session()
         item = session.query(Items).get(item_id)
         session.delete(item)
@@ -87,7 +94,7 @@ class ItemsResource(Resource):
         return jsonify({'success': 'OK'})
 
     def put(self, item_id):
-        abort_if_items_not_found(item_id)
+        abort_if_items_not_found(item_id).json()
         session = create_session()
         args = parser.parse_args()
         item = session.query(Items).get(item_id)

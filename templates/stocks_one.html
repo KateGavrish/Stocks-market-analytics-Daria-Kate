@@ -54,7 +54,10 @@
         </a>
     {% endif %}
         </form>
-        <div class="my-chart1">{{ charts.my_chart }}</div>
+        <div class="my-chart1">{{ charts.open }}</div>
+        <div class="my-chart1">{{ charts.high }}</div>
+        <div class="my-chart1">{{ charts.low }}</div>
+        <div class="my-chart1">{{ charts.close }}</div>
     </div>
     <main role="main" class="container">
         {% block content %}{% endblock %}

@@ -13,7 +13,6 @@ def xml_to_json(xml_file):
 def daily_data_of_all_change(list_id_curr):
     dict_of_delta = dict()
     for id_curr in list_id_curr:
-        print(id_curr)
         date1 = datetime.date(2020, 2, 28).strftime('%d/%m/%Y')
         date2 = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
 
@@ -23,7 +22,6 @@ def daily_data_of_all_change(list_id_curr):
         except Exception as e:
             print(e)
             dict_of_delta[id_curr] = 0
-        print(dict_of_delta)
     return dict_of_delta
 
 

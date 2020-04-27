@@ -1,3 +1,5 @@
+import time
+
 from flask import Flask, render_template, redirect, request, send_from_directory
 from requests import get, post
 import pandas as pd
@@ -26,44 +28,54 @@ HOST = 'http://127.0.0.1:5000'
 @login_manager.user_loader
 def load_user(user_id):
     a = get(f'{HOST}/api/users/{user_id}').json()
-    user = User()
-    user.name = a['users']['name']
-    user.surname = a['users']['surname']
-    user.hashed_password = a['users']['hashed_password']
-    user.email = a['users']['email']
-    user.id = a['users']['id']
-    return user
+    if a['users']:
+        user = User()
+        user.name = a['users']['name']
+        user.surname = a['users']['surname']
+        user.hashed_password = a['users']['hashed_password']
+        user.email = a['users']['email']
+        user.id = a['users']['id']
+        return user
+    return None
 
 
-# @app.route('/stocks/<ticker>', methods=['GET', 'POST'])
-# def stocks_one(ticker):
-#     form = DateForm()
-#     date_from = form.date_from.data
-#     date_to = form.date_to.data
-#     message = " "
-#     try:
-#         data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
-#                                           date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
-#         data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
-#     except Exception:
-#         message = "Что-то пошло не так. Попробуйте ввести другую дату"
-#         date_to = datetime.date.today()
-#         date_from = datetime.date.today() - datetime.timedelta(days=30)
-#         data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
-#                                           date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
-#         data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
-#
-#     create_excel_chart(name, code, data[1:])  # создание excel-файла
-#     my_chart = LineChart("my_chart", options={'title': name, 'width': '100%'})
-#     my_chart.add_column("string", "Дата")
-#     my_chart.add_column("number", "Open")
-#     my_chart.add_column("string", "High")
-#     my_chart.add_column("number", "Low")
-#     my_chart.add_column("string", "Close")
-#     my_chart.add_rows(data[1:])
-#     charts.register(my_chart)
-#
-#     return render_template('stocks_one.html', form=form, message=message)
+@app.route('/stocks/<ticker>', methods=['GET', 'POST'])
+def stocks_one(ticker):
+    form = DateForm()
+    date_from = form.date_from.data
+    date_to = form.date_to.data
+    message = " "
+    try:
+        data = yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4]
+    except Exception:
+        message = "Что-то пошло не так. Попробуйте ввести другую дату"
+        date_from = datetime.date.today() - datetime.timedelta(days=30)
+        data = yf.download(ticker, start=date_from).iloc[:, 0:4]
+    open = LineChart("open", options={'title': f'{ticker} Open', 'width': '100%'})
+    high = LineChart("high", options={'title': f'{ticker} High', 'width': '100%'})
+    low = LineChart("low", options={'title': f'{ticker} Low', 'width': '100%'})
+    close = LineChart("close", options={'title': f'{ticker} Close', 'width': '100%'})
+
+    open.add_column("string", "Дата")
+    high.add_column("string", "Дата")
+    low.add_column("string", "Дата")
+    close.add_column("string", "Дата")
+
+    open.add_column("number", "Open")
+    high.add_column("number", "High")
+    low.add_column("number", "Low")
+    close.add_column("number", "Close")
+    open.add_rows(list(zip(*[data.index] + [data['Open'].values.tolist()])))
+    high.add_rows(list(zip(*[data.index] + [data['High'].values.tolist()])))
+    low.add_rows(list(zip(*[data.index] + [data['Low'].values.tolist()])))
+    close.add_rows(list(zip(*[data.index] + [data['Close'].values.tolist()])))
+
+    charts.register(open)
+    charts.register(high)
+    charts.register(low)
+    charts.register(close)
+
+    return render_template('stocks_one.html', form=form, message=message)
 
 
 @app.route('/stocks')
