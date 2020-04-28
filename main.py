@@ -1,11 +1,11 @@
 from flask import Flask, render_template, redirect, request, send_from_directory
 from requests import get, post
-
+# import pandas as pd
 from data import db_session
 from data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_googlecharts import GoogleCharts, LineChart
-
+# import yfinance as yf
 from data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
@@ -39,6 +39,56 @@ def load_user(user_id):
     user.email = a['users']['email']
     user.id = a['users']['id']
     return user
+
+
+# @app.route('/stocks/<ticker>', methods=['GET', 'POST'])
+# def stocks_one(ticker):
+#     form = DateForm()
+#     date_from = form.date_from.data
+#     date_to = form.date_to.data
+#     message = " "
+#     try:
+#         data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
+#                                           date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
+#         data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
+#     except Exception:
+#         message = "Что-то пошло не так. Попробуйте ввести другую дату"
+#         date_to = datetime.date.today()
+#         date_from = datetime.date.today() - datetime.timedelta(days=30)
+#         data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
+#                                           date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
+#         data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
+#
+#     create_excel_chart(name, code, data[1:])  # создание excel-файла
+#     my_chart = LineChart("my_chart", options={'title': name, 'width': '100%'})
+#     my_chart.add_column("string", "Дата")
+#     my_chart.add_column("number", "Open")
+#     my_chart.add_column("string", "High")
+#     my_chart.add_column("number", "Low")
+#     my_chart.add_column("string", "Close")
+#     my_chart.add_rows(data[1:])
+#     charts.register(my_chart)
+#
+#     return render_template('stocks_one.html', form=form, message=message)
+
+
+@app.route('/stocks')
+def stocks():
+    date = datetime.date.today().strftime('%Y-%m-%d')
+    a = ['AAPL', 'AAL', 'SPY', 'WWE', 'DAKT', 'ORA', 'CAMP', 'BREW']
+    b = []
+    for x in a:
+        try:
+            data = yf.download(x, start=date)
+            if not data.empty:
+                open = int(data['Open'][0] * 100) / 100
+                high = int(data['High'][0] * 100) / 100
+                low = int(data['Low'][0] * 100) / 100
+                close = int(data['Close'][0] * 100) / 100
+                b.append([x, open, high, low, close])
+        except Exception:
+            pass
+    return render_template('stocks.html', params=b)
 
 
 @app.route('/index')
@@ -137,12 +187,15 @@ def logout():
 @app.route('/account', methods=['GET', 'POST'])
 def user_account():
     date = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
-    list_id_curr = get(f'{HOST}/api/items_of_user/{current_user.id}')
+    list_id_curr = get(f'{HOST}/api/items_of_user/{current_user.id}').json()
     if list_id_curr:
+        list_id_curr = list_id_curr['item']['item'].split('-')
         params = [x for x in daily_data_of_all(date)["ValCurs"]["Valute"] if x['@ID'] in list_id_curr]
+        delta = daily_data_of_all_change(list_id_curr)
     else:
+        list_id_curr = [x[0] for x in list_of_tuples_id_and_name()]
         params = daily_data_of_all(date)["ValCurs"]["Valute"]
-    delta = daily_data_of_all_change(list_id_curr)
+        delta = daily_data_of_all_change(list_id_curr)
     return render_template('account.html', params=params, delta=delta)
 
 

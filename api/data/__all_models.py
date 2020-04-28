@@ -1,2 +1,2 @@
 from . import users
-from . import selected_items
+from . import selected_items, mailing

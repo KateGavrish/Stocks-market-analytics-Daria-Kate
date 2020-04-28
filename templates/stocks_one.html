@@ -11,6 +11,7 @@
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    {{ charts_init }}
 </head>
 <body>
     <nav class="navbar navbar-light bg-light">
@@ -23,13 +24,39 @@
         </p>
         {% else %}
             <p>
-                <a class="btn btn-primary" href="/register">Зарегистрироваться</a>
+                <a class="btn btn-primary " href="/register">Зарегистрироваться</a>
                 <a class="btn btn-success" href="/login">Войти</a>
             </p>
         {% endif %}
     </nav>
+    <a href="/" class="a-margin"><img src="/static/img/arrow.png"></a>
+    <div>
+        <form action="" method="post" class="date-form">
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.date_from(class="form-control", type="date") }}<br>
+                {% for error in form.date_from.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+                {{ form.date_to(class="form-control", type="date") }}<br>
+                {% for error in form.date_to.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+            <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+            <div class="message">{{ message }}</div>
+            {% if current_user.is_authenticated %}
+        <a href="/download/chart.xlsx" download class="a-margin">
+	        <button class="btn btn-primary">Скачать файл</button>
+        </a>
+    {% endif %}
+        </form>
+        <div class="my-chart1">{{ charts.my_chart }}</div>
+    </div>
     <main role="main" class="container">
-        <a class="btn btn-success" href="/stocks">Акции</a>
         {% block content %}{% endblock %}
     </main>
 </body>

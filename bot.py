@@ -2,14 +2,17 @@ import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
+from requests import get, post, delete
 
 from datetime import datetime
 import schedule
 import threading
 
-from config import LOGIN, PASSWORD, TOKEN_VK, GROUP_ID
+from config import TOKEN_VK, GROUP_ID
 from scripts.functions import *
 from scripts.excel_func import create_excel_chart
+
+HOST = 'http://127.0.0.1:5000'
 
 users_data = {}
 flags = {'AU': '🇦🇺', 'AZ': '🇦🇿', 'GB': '🇬🇧', 'AM': '🇦🇲', 'BY': '🇧🇾', 'BG': '🇧🇬', 'BR': '🇧🇷', 'HU': '🇭🇺',
@@ -38,11 +41,23 @@ def generate_keyboard(n):
         keyboard.add_line()
         keyboard.add_button('помощь', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('рассылка', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_line()
+        keyboard.add_button('Летающие деньги', color=VkKeyboardColor.DEFAULT)
     elif n == 5:
         keyboard.add_button('неделя', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('день', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
         keyboard.add_button('вернуться в меню', color=VkKeyboardColor.DEFAULT)
+    elif n == 7:
+        keyboard.add_button('Да', color=VkKeyboardColor.POSITIVE)
+        keyboard.add_button('Нет', color=VkKeyboardColor.NEGATIVE)
+    elif n == 21:
+        keyboard.add_button('добавить', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_line()
+        keyboard.add_button('🔙', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_line()
+        keyboard.add_button('отписаться от одной', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('отписаться от всех', color=VkKeyboardColor.PRIMARY)
     else:
         keyboard.add_button('Вернуться в меню', color=VkKeyboardColor.DEFAULT)
     return keyboard
@@ -122,11 +137,18 @@ def show_all(vk, uid):
 
 
 def mailing(vk, uid):
+    vk.messages.send(user_id=uid, message='управление вашей подпиской 💸',
+                     random_id=get_random_id(), keyboard=generate_keyboard(21).get_keyboard())
+    users_data[uid]['state'] = 50
+
+
+def mailing_choose(vk, uid):
     message = [str(n + 1) + ' ' + flags.get(item["CharCode"][:2], " ") + f'{item["CharCode"]}' for n, item in
                enumerate(data)]
-    vk.messages.send(user_id=uid, message='Об изменении курса какой валюты вам сообщить?\n' + '\n'.join(message) + '\nвведите номер валюты в списке',
+    vk.messages.send(user_id=uid, message='Об изменении курса какой валюты вам сообщить?\n' + '\n'.join(
+        message) + '\nвведите номер валюты в списке',
                      random_id=get_random_id(), keyboard=generate_keyboard(0).get_keyboard())
-    users_data[uid]["state"] = 5
+    users_data[uid]["state"] = 51
 
 
 def mailing_check_number(vk, uid, text):
@@ -138,19 +160,20 @@ def mailing_check_number(vk, uid, text):
         raise MessageError
     vk.messages.send(user_id=uid, message="Изменение за какой период следует отслеживать?",
                      random_id=get_random_id(), keyboard=generate_keyboard(5).get_keyboard())
-    users_data[uid]["state"] = 6
+    users_data[uid]["state"] = 52
 
 
 def mailing_period(vk, uid, text):
-    d = {'день': 'day', 'неделя': 'week'}
+    d = {'день': 1, 'неделя': 7}
     text = text.lstrip().rstrip()
     try:
         users_data[uid]['temporary']['period'] = d[text]
     except Exception:
         raise MessageError
-    vk.messages.send(user_id=uid, message="Я сообщу вам, когда курс валюты изменится на р% \n введите р в формате '+р' или '-р'",
+    vk.messages.send(user_id=uid,
+                     message="Я сообщу вам, когда курс валюты изменится на р% \n введите р в формате '+р' 📈 или '-р' 📉",
                      random_id=get_random_id(), keyboard=generate_keyboard(0).get_keyboard())
-    users_data[uid]["state"] = 7
+    users_data[uid]["state"] = 53
 
 
 def mailing_percent(vk, uid, text):
@@ -159,9 +182,76 @@ def mailing_percent(vk, uid, text):
         users_data[uid]['temporary']['percent'] = float(text)
     except Exception:
         raise MessageError
+    d = {7: 'неделю', 1: 'день'}
     vk.messages.send(user_id=uid,
-                     message="",
+                     message=f"Я отправлю вам сообщение, если за {d[users_data[uid]['temporary']['period']]} курс " +
+                             f"{users_data[uid]['temporary']['currency'][1]} изменится" +
+                             f" на {users_data[uid]['temporary']['percent']}%\nВсё правильно?",
                      random_id=get_random_id(), keyboard=generate_keyboard(7).get_keyboard())
+    users_data[uid]['state'] = 54
+
+
+def unsubscribe_from_all(vk, uid):
+    res = delete(f'{HOST}/api/user-mailing-lists/{uid}').json()
+    if res['success'] == 'OK':
+        message = 'вы успешно отписались от всех рассылок'
+    else:
+        message = 'у вас нет активных подписок'
+    vk.messages.send(user_id=uid, message=message,
+                     random_id=get_random_id(), keyboard=generate_keyboard(2).get_keyboard())
+    users_data[uid]["state"] = 2
+
+
+def unsubscribe_choose(vk, uid):
+    res = get(f'{HOST}/api/user-mailing-lists/{uid}').json()['items']
+    if res:
+        d = {7: 'week', 1: 'day'}
+        users_data[uid]['temporary'] = res
+        message = [f'{i + 1} {res[i]["code"]} {d[res[i]["period"]]} {res[i]["percent"]}%' for i in range(len(res))]
+        vk.messages.send(user_id=uid, message='Краткая информация о всех ваших подписках:\n' + '\n'.join(
+            message) + '\nвведите номера рассылок, от которых хотите отказаться через запятую',
+                         random_id=get_random_id(), keyboard=generate_keyboard(0).get_keyboard())
+        users_data[uid]["state"] = 60
+    else:
+        vk.messages.send(user_id=uid, message='у вас нет активных подписок',
+                         random_id=get_random_id(), keyboard=generate_keyboard(2).get_keyboard())
+        users_data[uid]["state"] = 2
+
+
+def unsubscribe(vk, uid, text):
+    text = text.lstrip().rstrip().split(',')
+    items = []
+    for item in list(text):
+        item = item.rstrip().lstrip()
+        if item.isdigit():
+            items.append(item)
+            try:
+                delete(f'{HOST}/api/mailing/{users_data[uid]["temporary"][int(item) - 1]["id"]}').json()
+            except Exception as s:
+                pass
+    if items:
+        vk.messages.send(user_id=uid, message='вы успешно отписаны', random_id=get_random_id())
+        menu(vk, uid)
+    else:
+        raise MessageError
+
+
+def mailing_add_to_db(vk, uid):
+    post(f'{HOST}/api/mailing',
+         json={'currency': users_data[uid]['temporary']['currency'][0],
+               'period': users_data[uid]['temporary']['period'],
+               'uid': uid, 'code': users_data[uid]['temporary']['currency'][1],
+               'percent': users_data[uid]['temporary']['percent'],
+               'status': True}).json()
+    users_data[uid]['temporary'] = {}
+    vk.messages.send(user_id=uid, message='подписка успешно активирована', random_id=get_random_id())
+    menu(vk, uid)
+
+
+def flying_money(vk, uid):
+    vk.messages.send(user_id=uid, message='Уверены, что хотите летающих денег?',
+                     random_id=get_random_id(), keyboard=generate_keyboard(7).get_keyboard())
+    users_data[uid]['state'] = 1000
 
 
 def main():
@@ -176,7 +266,7 @@ def main():
             try:
                 if 'state' not in users_data[uid]:
                     new_user(response, vk, uid)
-                elif event.message.text.lower() in ['меню', 'вернуться в меню']:
+                elif event.message.text.lower() in ['меню', 'вернуться в меню', '🔙']:
                     menu(vk, uid)
                 elif users_data[uid]['state'] == 2:
                     if event.message.text.lower() == 'текущий курс':
@@ -187,6 +277,8 @@ def main():
                         show_help(vk, uid)
                     elif event.message.text.lower() == 'рассылка':
                         mailing(vk, uid)
+                    elif event.message.text.lower() == 'летающие деньги':
+                        flying_money(vk, uid)
                     else:
                         raise MessageError
                 elif users_data[uid]['state'] == 3:
@@ -194,12 +286,34 @@ def main():
                 elif users_data[uid]['state'] == 4:
                     check_date_selection(vk, uid, event.message.text)
                     show_chart(vk, vk_session, uid)
-                elif users_data[uid]['state'] == 5:
+                elif users_data[uid]['state'] == 50:
+                    if event.message.text.lower() == 'добавить':
+                        mailing_choose(vk, uid)
+                    elif event.message.text.lower() == 'отписаться от всех':
+                        unsubscribe_from_all(vk, uid)
+                    elif event.message.text.lower() == 'отписаться от одной':
+                        unsubscribe_choose(vk, uid)
+                elif users_data[uid]['state'] == 51:
                     mailing_check_number(vk, uid, event.message.text)
-                elif users_data[uid]['state'] == 6:
+                elif users_data[uid]['state'] == 52:
                     mailing_period(vk, uid, event.message.text)
-                elif users_data[uid]['state'] == 7:
+                elif users_data[uid]['state'] == 53:
                     mailing_percent(vk, uid, event.message.text)
+                elif users_data[uid]['state'] == 54:
+                    if 'да' in event.message.text.lower():
+                        mailing_add_to_db(vk, uid)
+                    else:
+                        vk.messages.send(user_id=uid,
+                                         message="Тогда попробуем еще раз",
+                                         random_id=get_random_id())
+                        mailing(vk, uid)
+                elif users_data[uid]['state'] == 60:
+                    unsubscribe(vk, uid, event.message.text)
+                elif users_data[uid]['state'] == 1000:
+                    if 'да' in event.message.text.lower():
+                        vk.messages.send(user_id=uid, message='Полетели!\n' + '💸' * 1008,
+                                         random_id=get_random_id())
+                    menu(vk, uid)
                 else:
                     raise MessageError
             except MessageError:
@@ -234,3 +348,7 @@ t.start()
 if __name__ == '__main__':
     load_new_data()
     main()
+
+# не забыть:
+# проверка, что такая подписка уже есть
+# что-то пошло не так
