@@ -34,14 +34,16 @@ def abort_if_users_not_found(user_id):
     session = create_session()
     user = session.query(User).get(user_id)
     if not user:
-        jsonify(message=f"User {user_id} not found")
+        return 'NO'
+    return 'OK'
 
 
 def abort_if_items_not_found(item_id):
     session = create_session()
-    item = session.query(Items).get(item_id)
-    if not item:
-        jsonify(message=f"Item {item_id} not found")
+    user = session.query(User).get(item_id)
+    if not user:
+        return 'NO'
+    return 'OK'
 
 
 def abort_if_mailing_not_found(id_):
@@ -53,18 +55,21 @@ def abort_if_mailing_not_found(id_):
 
 class UsersResource(Resource):
     def get(self, user_id):
-        abort_if_users_not_found(user_id)
-        session = create_session()
-        user = session.query(User).get(user_id)
-        return jsonify({'users': user.to_dict(only=('name', 'surname', 'email', 'id', 'hashed_password'))})
+        a = abort_if_users_not_found(user_id)
+        if a == 'OK':
+            session = create_session()
+            user = session.query(User).get(user_id)
+            return jsonify({'users': user.to_dict(only=('name', 'surname', 'email', 'id', 'hashed_password'))})
+        return jsonify({'success': 'NO'})
 
     def delete(self, user_id):
-        abort_if_users_not_found(user_id)
-        session = create_session()
-        user = session.query(User).get(user_id)
-        session.delete(user)
-        session.commit()
-        return jsonify({'success': 'OK'})
+        a = abort_if_users_not_found(user_id)
+        if a == 'OK':
+            session = create_session()
+            user = session.query(User).get(user_id)
+            session.delete(user)
+            session.commit()
+            return jsonify({'success': 'OK'})
 
 
 class UsersListResource(Resource):
@@ -89,13 +94,15 @@ class UsersListResource(Resource):
 
 class ItemsResource(Resource):
     def get(self, item_id):
-        abort_if_items_not_found(item_id)
-        session = create_session()
-        item = session.query(Items).get(item_id)
-        return jsonify({'item': item.to_dict(only=('item', 'user'))})
+        a = abort_if_items_not_found(item_id)
+        if a == 'OK':
+            session = create_session()
+            item = session.query(Items).get(item_id)
+            return jsonify({'item': item.to_dict(only=('item', 'user'))})
+        return jsonify({'success': 'NO'})
 
     def delete(self, item_id):
-        abort_if_items_not_found(item_id)
+        abort_if_items_not_found(item_id).json()
         session = create_session()
         item = session.query(Items).get(item_id)
         session.delete(item)
@@ -103,7 +110,7 @@ class ItemsResource(Resource):
         return jsonify({'success': 'OK'})
 
     def put(self, item_id):
-        abort_if_items_not_found(item_id)
+        abort_if_items_not_found(item_id).json()
         session = create_session()
         args = parser.parse_args()
         item = session.query(Items).get(item_id)
@@ -130,12 +137,13 @@ class ItemsListResource(Resource):
 
 
 class MailingListResource(Resource):
-    def get(self):
+    def get(self):  # все подписки
         session = create_session()
         items = session.query(MailingItems).all()
+        session.close()
         return jsonify({'items': [item.to_dict(only=('currency', 'period', 'percent', 'uid', 'status', 'code')) for item in items]})
 
-    def post(self):
+    def post(self):  # добавить подписку
         args = parser.parse_args()
         session = create_session()
         item = MailingItems()
@@ -147,6 +155,7 @@ class MailingListResource(Resource):
         item.uid = int(args['uid'])
         session.add(item)
         session.commit()
+        session.close()
         return jsonify({'success': 'OK'})
 
 
@@ -156,9 +165,6 @@ class MailingUserResource(Resource):
         items = session.query(MailingItems).filter(MailingItems.uid == user_id).all()
         session.close()
         return jsonify({'items': [item.to_dict(only=('id', 'currency', 'period', 'percent', 'uid', 'status', 'code')) for item in items]})
-
-    def post(self, user_id):
-        pass
 
     def delete(self, user_id):  # отписаться от всех рассылок
         session = create_session()

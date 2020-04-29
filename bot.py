@@ -7,6 +7,7 @@ from requests import get, post, delete
 from datetime import datetime
 import schedule
 import threading
+import time
 
 from config import TOKEN_VK, GROUP_ID
 from scripts.functions import *
@@ -227,7 +228,7 @@ def unsubscribe(vk, uid, text):
             items.append(item)
             try:
                 delete(f'{HOST}/api/mailing/{users_data[uid]["temporary"][int(item) - 1]["id"]}').json()
-            except Exception as s:
+            except Exception:
                 pass
     if items:
         vk.messages.send(user_id=uid, message='вы успешно отписаны', random_id=get_random_id())
@@ -322,9 +323,31 @@ def main():
                                  random_id=get_random_id(), keyboard=keyboard.get_keyboard())
             except Exception as s:
                 print(s)
-                keyboard = generate_keyboard(users_data[uid])
                 vk.messages.send(user_id=uid, message='Что-то пошло не так,но мы все исправим',
-                                 random_id=get_random_id(), keyboard=keyboard.get_keyboard())
+                                 random_id=get_random_id())
+                menu(vk, uid)
+
+
+def mailing_main():
+    list_id_curr = [cur_id[i][0] for i in cur_id]
+    week = daily_data_of_all_change(list_id_curr, 7)
+    day = daily_data_of_all_change(list_id_curr, 1)
+    mailing = {1: day, 7: week}
+    all_ = get(f'{HOST}/api/mailing').json()["items"]
+    vk_session = vk_api.VkApi(token=TOKEN_VK)
+    vk = vk_session.get_api()
+    d = {1: 'последний день', 7: "последнюю неделю"}
+    for item in all_:
+        try:
+            if float(mailing[item["period"]][item["currency"]]) <= item["percent"] >= 0:
+                message = f"❗ за {d[item['period']]} курс {item['code']} вырос на {mailing[item['period']][item['currency']]}% ❗"
+                vk.messages.send(user_id=item['uid'], random_id=get_random_id(), message=message)
+            elif float(mailing[item["period"]][item["currency"]]) >= item["percent"] <= 0:
+                message = f"❗ за {d[item['period']]} курс {item['code']} понизился на {abs(float(mailing[item['period']][item['currency']]))}% ❗"
+                vk.messages.send(user_id=item['uid'], random_id=get_random_id(), message=message)
+        except Exception:
+            pass
+        time.sleep(1)
 
 
 def load_new_data():
@@ -342,13 +365,10 @@ def go():
 schedule.every().day.at("06:00").do(load_new_data)
 schedule.every().day.at("12:00").do(load_new_data)
 schedule.every().day.at("18:00").do(load_new_data)
+schedule.every().day.at("12:10").do(mailing_main)
 t = threading.Thread(target=go)
 t.start()
 
 if __name__ == '__main__':
     load_new_data()
     main()
-
-# не забыть:
-# проверка, что такая подписка уже есть
-# что-то пошло не так
