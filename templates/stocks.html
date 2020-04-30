@@ -12,11 +12,11 @@
     </tr>
     {% for item in params %}
         <tr>
-            <td><a href="/stocks/{{ item[0] }}">{{ item[0] }}</a></td>
-            <td>{{ item[1] }}</td>
-            <td>{{ item[2] }}</td>
-            <td>{{ item[3] }}</td>
-            <td>{{ item[4] }}</td>
+            <td class="stocks"><a href="/stocks/{{ item[0] }}" class="black-link">{{ item[0] }}</a></td>
+            <td class="stocks">{{ item[1] }}</td>
+            <td class="stocks">{{ item[2] }}</td>
+            <td class="stocks">{{ item[3] }}</td>
+            <td class="stocks">{{ item[4] }}</td>
         </tr>
     {% endfor %}
 </table>

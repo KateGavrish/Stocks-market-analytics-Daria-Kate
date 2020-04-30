@@ -120,6 +120,9 @@ td.delta {
     text-align: center;
     color: red;
 }
+td.stocks {
+    text-align: center;
+}
 
 td.delta1 {
     text-align: center;
