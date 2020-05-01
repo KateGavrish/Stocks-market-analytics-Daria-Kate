@@ -129,13 +129,12 @@ def check_date_selection(vk, uid, text):
                                                       users_data[uid]['currency'][0])["ValCurs"]["Record"]
         data_of_one_curr = list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data_of_one_curr))
     except Exception as s:
-        print(s)
         raise MessageError
     name = from_id_to_name(users_data[uid]['currency'][0])
     code = users_data[uid]['currency'][1]
     filename = f'{code}_{date_from}_{date_to}'.replace('/', '-') + '.xlsx'
-    # create_excel_chart(name, code, data_of_one_curr, filename)
-    create([{'name': code, 'chart_name': name, data: data_of_one_curr}], filename)
+    data_ = [{'name': code, 'chart_name': name, 'data': data_of_one_curr}]
+    create(data_, filename)
     users_data[uid]['filename'] = filename
 
 
