@@ -8,12 +8,18 @@ from datetime import datetime
 import schedule
 import threading
 import time
+from os import getenv
+
+import yfinance as yf
+import pandas as pd
 
 from config import TOKEN_VK, GROUP_ID
 from scripts.functions import *
-from scripts.excel_func import create_excel_chart
+from scripts.excel_func import create
 
 HOST = 'http://127.0.0.1:5000'
+# TOKEN_VK = getenv("TOKEN_VK", "")
+# GROUP_ID = getenv("GROUP_ID", "")
 
 users_data = {}
 flags = {'AU': '🇦🇺', 'AZ': '🇦🇿', 'GB': '🇬🇧', 'AM': '🇦🇲', 'BY': '🇧🇾', 'BG': '🇧🇬', 'BR': '🇧🇷', 'HU': '🇭🇺',
@@ -21,6 +27,7 @@ flags = {'AU': '🇦🇺', 'AZ': '🇦🇿', 'GB': '🇬🇧', 'AM': '🇦🇲',
          'CN': '🇨🇳', 'MD': '🇲🇩', 'NO': '🇳🇴', 'PL': '🇵🇱', 'RO': '🇷🇴', 'SG': '🇸🇬', 'TJ': '🇹🇯', 'TR': '🇹🇷',
          'TM': '🇹🇲', 'UZ': '🇺🇿', 'UA': '🇺🇦', 'CZ': '🇨🇿', 'SE': '🇸🇪', 'CH': '🇨🇭', 'ZA': '🇿🇦', 'KR': '🇰🇷',
          'JP': '🇯🇵'}
+STOCKS = ['AAPL', 'AAL', 'SPY', 'WWE', 'DAKT', 'ORA', 'CAMP', 'BREW']
 
 
 class MessageError(Exception):
@@ -37,8 +44,8 @@ def auth_handler():
 def generate_keyboard(n):
     keyboard = VkKeyboard(one_time=True)
     if n == 2:
-        keyboard.add_button('текущий курс', color=VkKeyboardColor.PRIMARY)
-        keyboard.add_button('выбрать валюту', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('валюта', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('акции', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
         keyboard.add_button('помощь', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('рассылка', color=VkKeyboardColor.DEFAULT)
@@ -59,6 +66,16 @@ def generate_keyboard(n):
         keyboard.add_line()
         keyboard.add_button('отписаться от одной', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('отписаться от всех', color=VkKeyboardColor.PRIMARY)
+    elif n == 40:
+        keyboard.add_button('текущий курс', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('выбрать валюту', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_line()
+        keyboard.add_button('вернуться в меню', color=VkKeyboardColor.DEFAULT)
+    elif n == 30:
+        for i in range(len(STOCKS)):
+            keyboard.add_button(STOCKS[i], color=VkKeyboardColor.PRIMARY)
+            if i % 4 == 3 and i != len(STOCKS) - 1:
+                keyboard.add_line()
     else:
         keyboard.add_button('Вернуться в меню', color=VkKeyboardColor.DEFAULT)
     return keyboard
@@ -88,9 +105,9 @@ def show_help(vk, uid):
 def choose_currency(vk, uid):
     currency = [str(n + 1) + ' ' + flags.get(item["CharCode"][:2], " ") + f'{item["CharCode"]}' for n, item in
                 enumerate(data)]
-    vk.messages.send(user_id=uid, message='Выберите валюту\n' + '\n'.join(currency),
+    vk.messages.send(user_id=uid, message='🌐 Выберите валюту\n' + '\n'.join(currency),
                      random_id=get_random_id())
-    users_data[uid]['state'] = 3
+    users_data[uid]['state'] = 41
 
 
 def check_the_currency_selection(vk, uid, text):
@@ -99,9 +116,9 @@ def check_the_currency_selection(vk, uid, text):
         users_data[uid]['currency'] = cur_id[int(text)]
     except Exception:
         raise MessageError
-    users_data[uid]['state'] = 4
+    users_data[uid]['state'] = 42
     vk.messages.send(user_id=uid,
-                     message=f'Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY',
+                     message=f'📆 Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY',
                      random_id=get_random_id())
 
 
@@ -117,7 +134,8 @@ def check_date_selection(vk, uid, text):
     name = from_id_to_name(users_data[uid]['currency'][0])
     code = users_data[uid]['currency'][1]
     filename = f'{code}_{date_from}_{date_to}'.replace('/', '-') + '.xlsx'
-    create_excel_chart(name, code, data_of_one_curr, filename)
+    # create_excel_chart(name, code, data_of_one_curr, filename)
+    create([{'name': code, 'chart_name': name, data: data_of_one_curr}], filename)
     users_data[uid]['filename'] = filename
 
 
@@ -135,6 +153,7 @@ def show_all(vk, uid):
                for item in data]
     vk.messages.send(user_id=uid, message='текущий курс\n' + '\n'.join(message),
                      random_id=get_random_id(), keyboard=generate_keyboard(2).get_keyboard())
+    users_data[uid]["state"] = 2
 
 
 def mailing(vk, uid):
@@ -255,6 +274,44 @@ def flying_money(vk, uid):
     users_data[uid]['state'] = 1000
 
 
+def show_stocks(vk, uid):
+    vk.messages.send(user_id=uid,
+                     attachment=f'photo-{GROUP_ID}_457239088',
+                     random_id=get_random_id(), keyboard=generate_keyboard(30).get_keyboard())
+    users_data[uid]["state"] = 30
+
+
+def stocks_ticker(vk, uid, text):
+    text = text.rstrip().lstrip().upper()
+    if text not in STOCKS:
+        raise MessageError
+    users_data[uid]['temporary'] = {}
+    users_data[uid]['temporary']['ticker'] = text
+    users_data[uid]['state'] = 31
+    vk.messages.send(user_id=uid, keyboard=generate_keyboard(0).get_keyboard(), random_id=get_random_id(),
+                     message=f'📆 Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY')
+
+
+def stocks_date(vk, uid, text):
+    ticker = users_data[uid]['temporary']['ticker']
+    try:
+        date_from, date_to = map(lambda x: '-'.join(x.split('/')[::-1]), text.lstrip().rstrip().split('-'))
+        data_ = yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4]
+    except Exception:
+        raise MessageError
+    open_ = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['Open'].values.tolist()]))
+    high = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['High'].values.tolist()]))
+    low = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['Low'].values.tolist()]))
+    close = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['Close'].values.tolist()]))
+    filename = f"{ticker}_{date_from}_{date_to}".replace('/', '-') + '.xlsx'
+    data_ = [{'name': ticker, 'chart_name': ticker + ' Open', 'data': open_},
+             {'name': ticker, 'chart_name': ticker + ' High', 'data': high},
+             {'name': ticker, 'chart_name': ticker + ' Low', 'data': low},
+             {'name': ticker, 'chart_name': ticker + ' Close', 'data': close}]
+    create(data_, filename=filename)
+    users_data[uid]['filename'] = filename
+
+
 def main():
     vk_session = vk_api.VkApi(token=TOKEN_VK)
     longpoll = VkBotLongPoll(vk_session, GROUP_ID)
@@ -270,10 +327,13 @@ def main():
                 elif event.message.text.lower() in ['меню', 'вернуться в меню', '🔙']:
                     menu(vk, uid)
                 elif users_data[uid]['state'] == 2:
-                    if event.message.text.lower() == 'текущий курс':
-                        show_all(vk, uid)
-                    elif event.message.text.lower() == 'выбрать валюту':
-                        choose_currency(vk, uid)
+                    if event.message.text.lower() == 'валюта':
+                        vk.messages.send(user_id=uid,
+                                         message="кнопочки к вашим услугам",
+                                         random_id=get_random_id(), keyboard=generate_keyboard(40).get_keyboard())
+                        users_data[uid]["state"] = 40
+                    elif event.message.text.lower() == 'акции':
+                        show_stocks(vk, uid)
                     elif event.message.text.lower() == 'помощь':
                         show_help(vk, uid)
                     elif event.message.text.lower() == 'рассылка':
@@ -282,9 +342,19 @@ def main():
                         flying_money(vk, uid)
                     else:
                         raise MessageError
-                elif users_data[uid]['state'] == 3:
+                elif users_data[uid]['state'] == 30:
+                    stocks_ticker(vk, uid, event.message.text)
+                elif users_data[uid]['state'] == 31:
+                    stocks_date(vk, uid, event.message.text)
+                    show_chart(vk, vk_session, uid)
+                elif users_data[uid]["state"] == 40:
+                    if event.message.text.lower() == 'текущий курс':
+                        show_all(vk, uid)
+                    elif event.message.text.lower() == 'выбрать валюту':
+                        choose_currency(vk, uid)
+                elif users_data[uid]['state'] == 41:
                     check_the_currency_selection(vk, uid, event.message.text)
-                elif users_data[uid]['state'] == 4:
+                elif users_data[uid]['state'] == 42:
                     check_date_selection(vk, uid, event.message.text)
                     show_chart(vk, vk_session, uid)
                 elif users_data[uid]['state'] == 50:
