@@ -16,8 +16,10 @@ import pandas as pd
 from config import TOKEN_VK, GROUP_ID
 from scripts.functions import *
 from scripts.excel_func import create
+from scripts.maps import *
 
 HOST = 'http://127.0.0.1:5000'
+# HOST = getenv("HOST", "")
 # TOKEN_VK = getenv("TOKEN_VK", "")
 # GROUP_ID = getenv("GROUP_ID", "")
 
@@ -30,7 +32,15 @@ flags = {'AU': '🇦🇺', 'AZ': '🇦🇿', 'GB': '🇬🇧', 'AM': '🇦🇲',
 STOCKS = ['AAPL', 'AAL', 'SPY', 'WWE', 'DAKT', 'ORA', 'CAMP', 'BREW']
 
 
-class MessageError(Exception):
+class MyErrors(Exception):
+    pass
+
+
+class MessageError(MyErrors):
+    pass
+
+
+class GeoError(MyErrors):
     pass
 
 
@@ -45,6 +55,7 @@ def generate_keyboard(n):
     keyboard = VkKeyboard(one_time=True)
     if n == 2:
         keyboard.add_button('валюта', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('организации', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('акции', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
         keyboard.add_button('помощь', color=VkKeyboardColor.DEFAULT)
@@ -66,6 +77,16 @@ def generate_keyboard(n):
         keyboard.add_line()
         keyboard.add_button('отписаться от одной', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('отписаться от всех', color=VkKeyboardColor.PRIMARY)
+    elif n == 70:
+        keyboard.add_button('банк', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('🔙', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('банкомат', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_line()
+        keyboard.add_button('обмен валюты', color=VkKeyboardColor.PRIMARY)
+    elif n == 71:
+        keyboard.add_location_button()
+        keyboard.add_line()
+        keyboard.add_button('вернуться в меню', color=VkKeyboardColor.DEFAULT)
     elif n == 40:
         keyboard.add_button('текущий курс', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('выбрать валюту', color=VkKeyboardColor.PRIMARY)
@@ -118,7 +139,7 @@ def check_the_currency_selection(vk, uid, text):
         raise MessageError
     users_data[uid]['state'] = 42
     vk.messages.send(user_id=uid,
-                     message=f'📆 Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY',
+                     message=f'📅 Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY',
                      random_id=get_random_id())
 
 
@@ -288,13 +309,14 @@ def stocks_ticker(vk, uid, text):
     users_data[uid]['temporary']['ticker'] = text
     users_data[uid]['state'] = 31
     vk.messages.send(user_id=uid, keyboard=generate_keyboard(0).get_keyboard(), random_id=get_random_id(),
-                     message=f'📆 Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY')
+                     message=f'📅 Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY')
 
 
 def stocks_date(vk, uid, text):
     ticker = users_data[uid]['temporary']['ticker']
     try:
         date_from, date_to = map(lambda x: '-'.join(x.split('/')[::-1]), text.lstrip().rstrip().split('-'))
+        vk.messages.send(user_id=uid, random_id=get_random_id(), message='подождите, собираю информацию🔎')
         data_ = yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4]
     except Exception:
         raise MessageError
@@ -309,6 +331,44 @@ def stocks_date(vk, uid, text):
              {'name': ticker, 'chart_name': ticker + ' Close', 'data': close}]
     create(data_, filename=filename)
     users_data[uid]['filename'] = filename
+
+
+def type_selection(vk, uid, text):
+    text = text.lstrip().rstrip().lower()
+    if text not in ['обмен валюты', 'банк', 'банкомат']:
+        raise MessageError
+    users_data[uid]['type'] = text
+    d = {'обмен валюты': 'пункты обмена валют', 'банк': 'банки', 'банкомат': 'банкоматы'}
+    vk.messages.send(user_id=uid, random_id=get_random_id(),
+                     keyboard=generate_keyboard(71).get_keyboard(),
+                     message=f'я найду ближайшие к вам {d[text]}💰 просто выберите ваше местоположение')
+    users_data[uid]['state'] = 71
+
+
+def search_for_banks(vk, vk_session, uid, geo):
+    if not geo:
+        raise GeoError
+    ll = str(geo['coordinates']['longitude']) + ',' + str(geo['coordinates']['latitude'])
+    span = "0.003,0.003"
+    banks = find_businesses(ll, span, users_data[uid]['type'])
+    message = []
+    pt = [ll + ',home']
+    for i in range(len(banks)):
+        pt.append(f'{",".join(list(map(str, banks[i]["geometry"]["coordinates"])))},pm2blm{i + 1}')
+        bank = banks[i]["properties"]["CompanyMetaData"]
+        message.append('\n'.join(
+            [f'{i + 1}. {bank["name"]}', 'Адрес: ' + bank["address"], 'телефон: ' + bank['Phones'][0]["formatted"],
+             'режим работы: ' + bank["Hours"]["text"]]))
+    if show_map(pt):
+        upload = vk_api.VkUpload(vk_session)
+        photo = upload.photo_messages('static/img/map.png')[0]
+        attachment = f'photo{photo["owner_id"]}_{photo["id"]}'
+    else:
+        attachment = None
+    vk.messages.send(user_id=uid,
+                     message='\n\n'.join(message), attachment=attachment,
+                     random_id=get_random_id(), dont_parse_links=1)
+    menu(vk, uid)
 
 
 def main():
@@ -330,7 +390,7 @@ def main():
                         vk.messages.send(user_id=uid,
                                          message="кнопочки к вашим услугам",
                                          random_id=get_random_id(), keyboard=generate_keyboard(40).get_keyboard())
-                        users_data[uid]["state"] = 40
+                        users_data[uid]['state'] = 40
                     elif event.message.text.lower() == 'акции':
                         show_stocks(vk, uid)
                     elif event.message.text.lower() == 'помощь':
@@ -339,8 +399,17 @@ def main():
                         mailing(vk, uid)
                     elif event.message.text.lower() == 'летающие деньги':
                         flying_money(vk, uid)
+                    elif event.message.text.lower() == 'организации':
+                        vk.messages.send(user_id=uid, random_id=get_random_id(),
+                                         keyboard=generate_keyboard(70).get_keyboard(),
+                                         message='я найду ближайшие к вам банки, банкоматы или пункты обмена валют. Что желаете?')
+                        users_data[uid]['state'] = 70
                     else:
                         raise MessageError
+                elif users_data[uid]['state'] == 70:
+                    type_selection(vk, uid, event.message.text)
+                elif users_data[uid]['state'] == 71:
+                    search_for_banks(vk, vk_session, uid, event.message.geo)
                 elif users_data[uid]['state'] == 30:
                     stocks_ticker(vk, uid, event.message.text)
                 elif users_data[uid]['state'] == 31:
@@ -351,6 +420,8 @@ def main():
                         show_all(vk, uid)
                     elif event.message.text.lower() == 'выбрать валюту':
                         choose_currency(vk, uid)
+                    else:
+                        raise MessageError
                 elif users_data[uid]['state'] == 41:
                     check_the_currency_selection(vk, uid, event.message.text)
                 elif users_data[uid]['state'] == 42:
@@ -363,6 +434,8 @@ def main():
                         unsubscribe_from_all(vk, uid)
                     elif event.message.text.lower() == 'отписаться от одной':
                         unsubscribe_choose(vk, uid)
+                    else:
+                        raise MessageError
                 elif users_data[uid]['state'] == 51:
                     mailing_check_number(vk, uid, event.message.text)
                 elif users_data[uid]['state'] == 52:
@@ -386,13 +459,17 @@ def main():
                     menu(vk, uid)
                 else:
                     raise MessageError
+            except GeoError:
+                vk.messages.send(user_id=uid,
+                                 message='Пожалуйста, воспользуйся кнопочкой для выбора местоположения🗺📍',
+                                 random_id=get_random_id(), keyboard=generate_keyboard(71).get_keyboard())
             except MessageError:
                 keyboard = generate_keyboard(users_data[uid])
                 vk.messages.send(user_id=uid, message='Я тебя не понимаю. Попробуй еще раз или вернись в меню',
                                  random_id=get_random_id(), keyboard=keyboard.get_keyboard())
             except Exception as s:
                 print(s)
-                vk.messages.send(user_id=uid, message='Что-то пошло не так,но мы все исправим',
+                vk.messages.send(user_id=uid, message='⚠Что-то пошло не так,но мы все исправим⚠',
                                  random_id=get_random_id())
                 menu(vk, uid)
 
@@ -441,3 +518,5 @@ t.start()
 if __name__ == '__main__':
     load_new_data()
     main()
+
+    # 🔎 📮 📅 📆 📍 🗑 ⚠
