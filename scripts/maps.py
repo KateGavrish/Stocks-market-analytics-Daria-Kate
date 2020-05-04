@@ -2,7 +2,7 @@ import requests
 from os import getenv
 from config import API_KEY
 
-# API_KEY = getenv("API_ID", "")
+# API_KEY = getenv("API_KEY", "")
 
 
 def find_businesses(ll, spn, request, locale="ru_RU"):
