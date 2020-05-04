@@ -1,5 +1,3 @@
-import time
-
 from flask import Flask, render_template, redirect, request, send_from_directory
 from requests import get, post
 import pandas as pd
@@ -80,7 +78,7 @@ def stocks_one(ticker):
 
 @app.route('/stocks')
 def stocks():
-    date = datetime.date.today().strftime('%Y-%m-%d')
+    date = (datetime.date.today() - datetime.timedelta(days=2)).strftime('%Y-%m-%d')
     a = ['AAPL', 'AAL', 'SPY', 'WWE', 'DAKT', 'ORA', 'CAMP', 'BREW']
     b = []
     for x in a:
