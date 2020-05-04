@@ -1,12 +1,12 @@
 from flask import Flask, render_template, redirect, request, send_from_directory
 from requests import get, post
 import pandas as pd
-from data import db_session
-from data.users import User
+from api.data import db_session
+from api.data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_googlecharts import GoogleCharts, LineChart
 import yfinance as yf
-from data.selected_items import Items
+from api.data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
 from scripts.functions import *
@@ -26,7 +26,7 @@ HOST = 'http://127.0.0.1:5000'
 @login_manager.user_loader
 def load_user(user_id):
     a = get(f'{HOST}/api/users/{user_id}').json()
-    if a['users']:
+    if 'users' in a:
         user = User()
         user.name = a['users']['name']
         user.surname = a['users']['surname']
@@ -120,19 +120,25 @@ def currencies_page(code):
         data = data_of_one_curr_for_a_per(date_from.strftime('%d/%m/%Y'),
                                           date_to.strftime('%d/%m/%Y'), cur_id)["ValCurs"]["Record"]
         data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
-
-    create_excel_chart(name, code, data[1:])  # создание excel-файла
+    filename = f'{code}_{date_from}_{date_to}'
     my_chart = LineChart("my_chart", options={'title': name, 'width': '100%'})
     my_chart.add_column("string", "Дата")
     my_chart.add_column("number", "Цена")
     my_chart.add_rows(data[1:])
     charts.register(my_chart)
 
-    return render_template('currency.html', form=form, message=message)
+    return render_template('currency.html', form=form, message=message, name=f"{filename}.xlsx")
 
 
 @app.route('/download/<filename>')
 def download_file(filename):
+    code, date_from, date_to = filename.split('.')[0].split('_')
+    date_to = '/'.join(date_to.split('-')[::-1])
+    date_from = '/'.join(date_from.split('-')[::-1])
+    cur_id, name = from_code_to_id(code, True)
+    data = data_of_one_curr_for_a_per(date_from, date_to, cur_id)["ValCurs"]["Record"]
+    data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
+    create_excel_chart(name, code, data[1:], filename)  # создание excel файла
     return send_from_directory('static/excel', filename, as_attachment=True)
 
 
@@ -186,7 +192,7 @@ def logout():
 def user_account():
     date = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
     list_id_curr = get(f'{HOST}/api/items_of_user/{current_user.id}').json()
-    if list_id_curr:
+    if 'error' not in list_id_curr:
         list_id_curr = list_id_curr['item']['item'].split('-')
         params = [x for x in daily_data_of_all(date)["ValCurs"]["Valute"] if x['@ID'] in list_id_curr]
         delta = daily_data_of_all_change(list_id_curr)

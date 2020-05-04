@@ -20,8 +20,9 @@ def daily_data_of_all_change(list_id_curr):
         try:
             dict_of_delta[id_curr] = str(float(a['ValCurs']['Record'][1]['Value'].replace(',', '.')) * 100 / float(a['ValCurs']['Record'][0]['Value'].replace(',', '.')) - 100)[:5]
         except Exception as e:
-            print(e)
+            print(e, 1)
             dict_of_delta[id_curr] = 0
+    print(dict_of_delta)
     return dict_of_delta
 
 
@@ -46,9 +47,8 @@ def data_of_one_curr_for_a_per(date_from, date_to, id_curr):
 def from_id_to_name(id):
     """По id возвращает название"""
 
-    with open('static/static_data/code_of_currency.json') as f:
-        score = f.read()
-    resp = json.loads(score)
+    with open('static/static_data/code_of_currency.json', 'r', encoding='utf-8-sig') as f:
+        resp = json.loads(f.read())
     for i in range(len(resp['Valuta']['Item'])):
         if resp['Valuta']['Item'][i]['@ID'] == id:
             return resp['Valuta']['Item'][i]['Name']

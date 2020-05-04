@@ -4,7 +4,7 @@ from flask_restful import reqparse, Api, Resource
 
 from api.data.users import User
 from api.data.db_session import *
-from data.selected_items import Items
+from api.data.selected_items import Items
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -82,11 +82,11 @@ class ItemsResource(Resource):
         if a == 'OK':
             session = create_session()
             item = session.query(Items).get(item_id)
-            return jsonify({'item': item.to_dict(only=('item', 'user'))})
+            return jsonify({'item': item.to_dict(only=('item', 'user_id'))})
         return jsonify({'success': 'NO'})
 
     def delete(self, item_id):
-        abort_if_items_not_found(item_id).json()
+        abort_if_items_not_found(item_id)
         session = create_session()
         item = session.query(Items).get(item_id)
         session.delete(item)
@@ -94,7 +94,7 @@ class ItemsResource(Resource):
         return jsonify({'success': 'OK'})
 
     def put(self, item_id):
-        abort_if_items_not_found(item_id).json()
+        abort_if_items_not_found(item_id)
         session = create_session()
         args = parser.parse_args()
         item = session.query(Items).get(item_id)
@@ -107,14 +107,14 @@ class ItemsListResource(Resource):
     def get(self):
         session = create_session()
         items = session.query(Items).all()
-        return jsonify({'items': [item.to_dict(only=('item', 'user')) for item in items]})
+        return jsonify({'items': [item.to_dict(only=('item', 'user_id')) for item in items]})
 
     def post(self):
         args = parser.parse_args()
         session = create_session()
         item = Items()
-        item.item = args['item'],
-        item.user = int(args['user_id']),
+        item.item = args['item']
+        item.user_id = int(args['user_id'])
         session.add(item)
         session.commit()
         return jsonify({'success': 'OK'})
@@ -157,8 +157,11 @@ def load_us(user_id):
 @blueprint.route('/api/items_of_user/<int:user_id>',  methods=['GET'])
 def load_items(user_id):
     session = create_session()
-    item = session.query(Items).filter(Items.user == user_id).first()
-    return jsonify({'item': item.to_dict(only=('item', 'user'))})
+    try:
+        item = session.query(Items).filter(Items.user_id == user_id).all()[-1]
+        return jsonify({'item': item.to_dict(only=('item', 'user_id'))})
+    except Exception:
+        return jsonify({'error': 'Not found'})
 
 
 def main():

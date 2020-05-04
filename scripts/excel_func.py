@@ -1,8 +1,8 @@
 import xlsxwriter
 
 
-def create_excel_chart(name, code, data):
-    workbook = xlsxwriter.Workbook('static/excel/chart.xlsx')
+def create_excel_chart(name, code, data, filename):
+    workbook = xlsxwriter.Workbook(f'static/excel/{filename}')
     worksheet = workbook.add_worksheet()
 
     # Данные
