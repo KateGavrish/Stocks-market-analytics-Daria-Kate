@@ -49,15 +49,62 @@
             <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
             <div class="message">{{ message }}</div>
             {% if current_user.is_authenticated %}
-        <a href="/download/chart.xlsx" download class="a-margin">
-	        <button class="btn btn-primary">Скачать файл</button>
+        <a href="/download_csv/chart_csv.csv/{{ ticker }}/{{ form.date_from.data }}/{{ form.date_to.data }}" download  class="btn btn-primary">
+            Скачать файл
         </a>
     {% endif %}
         </form>
+        <div class="my-chart1">
+            <table>
+                <tr>
+                    <td>Название</td>
+                    <td>{{ info['shortName'] }} <img src="{{ info['logo_url'] }}"></td>
+                </tr>
+                <tr>
+                    <td>zip</td>
+                    <td>{{ info['zip'] }}</td>
+                </tr>
+                <tr>
+                    <td>Сектор</td>
+                    <td>{{ info['sector'] }}</td>
+                </tr>
+                <tr>
+                    <td>Штатные сотрудники</td>
+                    <td>{{ info['fullTimeEmployees'] }}</td>
+                </tr>
+                <tr>
+                    <td>Кратко о компании</td>
+                    <td>{{ info['longBusinessSummary'] }}</td>
+                </tr>
+                <tr>
+                    <td>Страна, город</td>
+                    <td>{{ info['country'] }}, {{ info['city'] }}</td>
+                </tr>
+                <tr>
+                    <td>Телефон</td>
+                    <td>{{ info['phone'] }}</td>
+                </tr>
+                <tr>
+                    <td>Официальный сайт</td>
+                    <td>{{ info['website'] }}</td>
+                </tr>
+                <tr>
+                    <td>Тикер</td>
+                    <td>{{ info['symbol'] }}</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>{{ info[''] }}</td>
+                </tr>
+            </table>
+        </div>
         <div class="my-chart1">{{ charts.open }}</div>
         <div class="my-chart1">{{ charts.high }}</div>
         <div class="my-chart1">{{ charts.low }}</div>
         <div class="my-chart1">{{ charts.close }}</div>
+        <div class="my-chart1">{{ charts.pred1 }}</div>
+        <div class="my-chart1">{{ charts.pred2 }}</div>
+        <div class="my-chart1">{{ charts.pred3 }}</div>
     </div>
     <main role="main" class="container">
         {% block content %}{% endblock %}
