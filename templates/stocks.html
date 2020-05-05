@@ -1,7 +1,22 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+<div style="margin: 20px auto; text-align: center; padding-left: 40%;">
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        {{ form.csrf_token }}
+        <p style="float: left;">
+            {{ form.search(class="form-control") }}<br>
+            {% for error in form.search.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+        <p style="float: left;" >{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        {{message}}
+    </form>
+    <div class="clearfix"></div>
+</div>
 <table>
     <tr>
         <th>Ticker</th>

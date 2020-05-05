@@ -41,3 +41,8 @@ class EditPreferencesForm(FlaskForm):
     example = MultiCheckboxField('Label', choices=files)
 
     submit = SubmitField('Сохранить')
+
+
+class Search(FlaskForm):
+    search = StringField('Поиск', validators=[DataRequired()])
+    submit = SubmitField('Найти')
