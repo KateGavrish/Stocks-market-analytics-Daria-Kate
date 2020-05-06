@@ -1,7 +1,7 @@
 import yfinance as yf
 
 
-msft = yf.Ticker("MSFT")
+msft = yf.Ticker("mstf")
 
 # get stock info
 print(msft.info)

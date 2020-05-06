@@ -30,7 +30,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 charts = GoogleCharts(app)
 
-HOST = 'http://127.0.0.1:5000'
+HOST = 'https://api-stocks-kate-daria.herokuapp.com/'
+with open('static/static_data/tickers.txt', 'r') as f:
+    a = f.readlines()[0].split(',')
 # HOST = getenv("HOST", "")
 
 
@@ -119,23 +121,40 @@ def stocks_one(ticker):
     return render_template('stocks_one.html', form=form, message=message, ticker=ticker, info=info)
 
 
-@app.route('/stocks')
+@app.route('/stocks', methods=['GET', 'POST'])
 def stocks():
-    date = (datetime.date.today() - datetime.timedelta(days=2)).strftime('%Y-%m-%d')
-    a = ['AAPL', 'AAL', 'SPY', 'WWE', 'DAKT', 'ORA', 'CAMP', 'BREW', 'MSTF']
-    b = []
-    for x in a:
+    global a
+
+    def table():
+        b = []
+        for x in a:
+            try:
+                data = yf.download(x, start=date)
+                if not data.empty:
+                    open = int(data['Open'][0] * 100) / 100
+                    high = int(data['High'][0] * 100) / 100
+                    low = int(data['Low'][0] * 100) / 100
+                    close = int(data['Close'][0] * 100) / 100
+                    b.append([x, open, high, low, close])
+            except Exception:
+                pass
+        return b
+    form = Search()
+    date = (datetime.date.today() - datetime.timedelta(days=10)).strftime('%Y-%m-%d')
+    if request.method == 'POST' and form.validate_on_submit():
+        tick = form.search.data.upper()
         try:
-            data = yf.download(x, start=date)
-            if not data.empty:
-                open = int(data['Open'][0] * 100) / 100
-                high = int(data['High'][0] * 100) / 100
-                low = int(data['Low'][0] * 100) / 100
-                close = int(data['Close'][0] * 100) / 100
-                b.append([x, open, high, low, close])
-        except Exception:
-            pass
-    return render_template('stocks.html', params=b)
+            data = yf.download(tick, start=date)
+            if not data.empty and tick not in a:
+                a.append(tick)
+                with open('static/static_data/tickers.txt', 'w') as f:
+                    f.write(','.join(a))
+            b = table()
+            return render_template('stocks.html', params=b, form=form)
+        except Exception as e:
+            print(e)
+    b = table()
+    return render_template('stocks.html', params=b, form=form)
 
 
 @app.route('/index')

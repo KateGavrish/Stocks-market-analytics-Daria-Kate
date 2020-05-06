@@ -6,7 +6,6 @@ from api.data.users import User
 from api.data.db_session import *
 from api.data.selected_items import Items
 from api.data.mailing import MailingItems
-from api.data.selected_items import Items
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -41,7 +40,7 @@ def abort_if_users_not_found(user_id):
 
 def abort_if_items_not_found(item_id):
     session = create_session()
-    user = session.query(User).get(item_id)
+    user = session.query(Items).get(item_id)
     if not user:
         return 'NO'
     return 'OK'
@@ -237,7 +236,7 @@ def load_items(user_id):
 
 
 def main():
-    global_init("user_data.sqlite")
+    global_init("../db/user_data.sqlite")
     api.add_resource(UsersListResource, '/api/users')
     api.add_resource(UsersResource, '/api/users/<int:user_id>')
     api.add_resource(ItemsListResource, '/api/items')
