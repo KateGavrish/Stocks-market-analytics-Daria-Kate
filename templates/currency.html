@@ -61,7 +61,7 @@
             <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
             <div class="message">{{ message }}</div>
             {% if current_user.is_authenticated %}
-        <a href="/download/chart.xlsx" download class="a-margin">
+        <a href="/download/{{ name }}" download class="a-margin">
 	        <button class="btn btn-primary">Скачать файл</button>
         </a>
     {% endif %}

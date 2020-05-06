@@ -3,16 +3,18 @@ import time
 from flask import Flask, render_template, redirect, request, send_from_directory
 from requests import get, post
 import pandas as pd
-from data import db_session
-from data.users import User
+from fbprophet import Prophet
+from api.data import db_session
+from api.data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_googlecharts import GoogleCharts, LineChart
 import yfinance as yf
-from data.selected_items import Items
+
+from api.data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
 from scripts.functions import *
-from scripts.excel_func import create_excel_chart
+from scripts.excel_func import create
 
 import schedule
 import threading
@@ -29,12 +31,13 @@ login_manager.init_app(app)
 charts = GoogleCharts(app)
 
 HOST = 'http://127.0.0.1:5000'
+# HOST = getenv("HOST", "")
 
 
 @login_manager.user_loader
 def load_user(user_id):
     a = get(f'{HOST}/api/users/{user_id}').json()
-    if a['users']:
+    if 'users' in a:
         user = User()
         user.name = a['users']['name']
         user.surname = a['users']['surname']
@@ -55,39 +58,71 @@ def stocks_one(ticker):
         data = yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4]
     except Exception:
         message = "Что-то пошло не так. Попробуйте ввести другую дату"
-        date_from = datetime.date.today() - datetime.timedelta(days=30)
+        date_from = (datetime.date.today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d')
         data = yf.download(ticker, start=date_from).iloc[:, 0:4]
+
+    msft = yf.Ticker(ticker)
+    info = msft.info
+
+    trend_df = yf.download(ticker, start='2000-01-05')
+    predictions = 60
+    train_df = trend_df[:-predictions]
+    train_df.reset_index(inplace=True)
+    train_df.rename(columns={'Date': 'ds', 'Close': 'y', 'High': 'yhat_upper', 'Low': 'yhat_lower'}, inplace=True)
+    m = Prophet(changepoint_prior_scale=0.1)
+    m.fit(train_df)
+    future = m.make_future_dataframe(periods=300)
+    forecast = m.predict(future)[['ds', 'yhat_upper', 'yhat', 'yhat_lower']].tail(200)
+
     open = LineChart("open", options={'title': f'{ticker} Open', 'width': '100%'})
     high = LineChart("high", options={'title': f'{ticker} High', 'width': '100%'})
     low = LineChart("low", options={'title': f'{ticker} Low', 'width': '100%'})
     close = LineChart("close", options={'title': f'{ticker} Close', 'width': '100%'})
+    pred1 = LineChart("pred1", options={'title': f'{ticker} prediction High', 'width': '100%'})
+    pred2 = LineChart("pred2", options={'title': f'{ticker} prediction Close', 'width': '100%'})
+    pred3 = LineChart("pred3", options={'title': f'{ticker} prediction Low', 'width': '100%'})
 
     open.add_column("string", "Дата")
     high.add_column("string", "Дата")
     low.add_column("string", "Дата")
     close.add_column("string", "Дата")
+    pred1.add_column("string", "Дата")
+    pred2.add_column("string", "Дата")
+    pred3.add_column("string", "Дата")
 
     open.add_column("number", "Open")
     high.add_column("number", "High")
     low.add_column("number", "Low")
     close.add_column("number", "Close")
-    open.add_rows(list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data.index))] + [data['Open'].values.tolist()])))
-    high.add_rows(list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data.index))] + [data['High'].values.tolist()])))
-    low.add_rows(list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data.index))] + [data['Low'].values.tolist()])))
-    close.add_rows(list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data.index))] + [data['Close'].values.tolist()])))
+
+    pred1.add_column("number", "Prediction high")
+    pred2.add_column("number", "Prediction close")
+    pred3.add_column("number", "Prediction low")
+
+    open.add_rows(list(zip(*[data.index] + [data['Open'].values.tolist()])))
+    high.add_rows(list(zip(*[data.index] + [data['High'].values.tolist()])))
+    low.add_rows(list(zip(*[data.index] + [data['Low'].values.tolist()])))
+    close.add_rows(list(zip(*[data.index] + [data['Close'].values.tolist()])))
+
+    pred1.add_rows(list(zip(*[forecast['ds']] + [forecast['yhat_upper'].values.tolist()])))
+    pred2.add_rows(list(zip(*[forecast['ds']] + [forecast['yhat'].values.tolist()])))
+    pred3.add_rows(list(zip(*[forecast['ds']] + [forecast['yhat_lower'].values.tolist()])))
 
     charts.register(open)
     charts.register(high)
     charts.register(low)
     charts.register(close)
+    charts.register(pred1)
+    charts.register(pred2)
+    charts.register(pred3)
 
-    return render_template('stocks_one.html', form=form, message=message)
+    return render_template('stocks_one.html', form=form, message=message, ticker=ticker, info=info)
 
 
 @app.route('/stocks')
 def stocks():
-    date = datetime.date.today().strftime('%Y-%m-%d')
-    a = ['AAPL', 'AAL', 'SPY', 'WWE', 'DAKT', 'ORA', 'CAMP', 'BREW']
+    date = (datetime.date.today() - datetime.timedelta(days=2)).strftime('%Y-%m-%d')
+    a = ['AAPL', 'AAL', 'SPY', 'WWE', 'DAKT', 'ORA', 'CAMP', 'BREW', 'MSTF']
     b = []
     for x in a:
         try:
@@ -146,7 +181,17 @@ def download_file(filename):
     cur_id, name = from_code_to_id(code, True)
     data = data_of_one_curr_for_a_per(date_from, date_to, cur_id)["ValCurs"]["Record"]
     data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
-    create_excel_chart(name, code, data[1:], filename)  # создание excel файла
+    data_ = [{'name': code, 'chart_name': name, 'data': data[1:]}]
+    create(data_, filename)  # создание excel файла
+    return send_from_directory('static/excel', filename, as_attachment=True)
+
+
+@app.route('/download_csv/<filename>/<ticker>/<date_from>/<date_to>')
+def download_csv_stocks(filename, ticker, date_from, date_to):
+    try:
+        yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4].to_csv('static/excel/chart_csv.csv')
+    except Exception as e:
+        print(e)
     return send_from_directory('static/excel', filename, as_attachment=True)
 
 
@@ -200,7 +245,7 @@ def logout():
 def user_account():
     date = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
     list_id_curr = get(f'{HOST}/api/items_of_user/{current_user.id}').json()
-    if list_id_curr:
+    if 'error' not in list_id_curr:
         list_id_curr = list_id_curr['item']['item'].split('-')
         params = [x for x in daily_data_of_all(date)["ValCurs"]["Valute"] if x['@ID'] in list_id_curr]
         delta = daily_data_of_all_change(list_id_curr)
