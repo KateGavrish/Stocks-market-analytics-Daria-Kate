@@ -21,7 +21,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 charts = GoogleCharts(app)
 
-HOST = 'http://127.0.0.1:5000'
+HOST = 'https://api-stocks-kate-daria.herokuapp.com/'
 with open('static/static_data/tickers.txt', 'r') as f:
     a = f.readlines()[0].split(',')
 
