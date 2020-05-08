@@ -21,7 +21,7 @@ class RegisterForm(FlaskForm):
     name = StringField('Имя пользователя', validators=[DataRequired()])
     surname = StringField('Фамилия пользователя', validators=[DataRequired()])
 
-    submit = SubmitField('Войти')
+    submit = SubmitField('Зарегистрироваться')
 
 
 class DateForm(FlaskForm):

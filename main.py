@@ -3,7 +3,7 @@ import time
 from flask import Flask, render_template, redirect, request, send_from_directory
 from requests import get, post
 import pandas as pd
-from fbprophet import Prophet
+# from fbprophet import Prophet
 from api.data import db_session
 from api.data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
