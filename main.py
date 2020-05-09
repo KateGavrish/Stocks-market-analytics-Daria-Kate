@@ -56,8 +56,8 @@ def stocks_one(ticker):
     msft = yf.Ticker(ticker)
     info = msft.info
 
-    trend_df = yf.download(ticker, start='2000-01-05')
-    predictions = 60
+    trend_df = yf.download(ticker, start='2005-01-05')
+    predictions = 200
     train_df = trend_df[:-predictions]
     train_df.reset_index(inplace=True)
     train_df.rename(columns={'Date': 'ds', 'Close': 'y', 'High': 'yhat_upper', 'Low': 'yhat_lower'}, inplace=True)
@@ -278,6 +278,11 @@ def edit_preferences():
         return redirect('/account')
 
     return render_template('edit_preferences.html', form=form)
+
+
+@app.route('/news')
+def news():
+    pass
 
 
 if __name__ == '__main__':

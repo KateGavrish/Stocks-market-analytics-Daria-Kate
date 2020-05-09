@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Новости</h1>
+{% for item in news%}
+<div class="col-md6 border rounded">
+    <h3>{{item.title}}</h3>
+    <div>
+        {{item.content}}
+    </div>
+    <div>
+        Источник - {{item.user.name}}, Дата написания - {{item.created_date}}
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
