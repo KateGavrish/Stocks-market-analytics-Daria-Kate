@@ -29,7 +29,6 @@ flags = {'AU': '🇦🇺', 'AZ': '🇦🇿', 'GB': '🇬🇧', 'AM': '🇦🇲',
          'CN': '🇨🇳', 'MD': '🇲🇩', 'NO': '🇳🇴', 'PL': '🇵🇱', 'RO': '🇷🇴', 'SG': '🇸🇬', 'TJ': '🇹🇯', 'TR': '🇹🇷',
          'TM': '🇹🇲', 'UZ': '🇺🇿', 'UA': '🇺🇦', 'CZ': '🇨🇿', 'SE': '🇸🇪', 'CH': '🇨🇭', 'ZA': '🇿🇦', 'KR': '🇰🇷',
          'JP': '🇯🇵'}
-STOCKS = ['AAPL', 'AAL', 'SPY', 'WWE', 'DAKT', 'ORA', 'CAMP', 'BREW', 'MSFT', 'TSLA']
 
 
 class MyErrors(Exception):
@@ -44,6 +43,10 @@ class GeoError(MyErrors):
     pass
 
 
+class DateError(MyErrors):
+    pass
+
+
 def auth_handler():
     """ При двухфакторной аутентификации вызывается эта функция. """
     key = input("Enter authentication code: ")
@@ -52,6 +55,7 @@ def auth_handler():
 
 
 def generate_keyboard(n):
+    global stocks
     keyboard = VkKeyboard(one_time=True)
     if n == 2:
         keyboard.add_button('валюта', color=VkKeyboardColor.PRIMARY)
@@ -62,7 +66,7 @@ def generate_keyboard(n):
         keyboard.add_button('рассылка', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
         keyboard.add_button('Летающие деньги', color=VkKeyboardColor.DEFAULT)
-    elif n == 5:
+    elif n == 52:
         keyboard.add_button('неделя', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('день', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
@@ -92,16 +96,18 @@ def generate_keyboard(n):
         keyboard.add_button('выбрать валюту', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
         keyboard.add_button('вернуться в меню', color=VkKeyboardColor.DEFAULT)
-    elif n == 42:
+    elif n == 42 or n == 31:
         keyboard.add_button('неделя', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('месяц', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('год', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
         keyboard.add_button('вернуться в меню', color=VkKeyboardColor.DEFAULT)
     elif n == 30:
-        for i in range(len(STOCKS)):
-            keyboard.add_button(STOCKS[i], color=VkKeyboardColor.PRIMARY)
-            if i % 4 == 3 and i != len(STOCKS) - 1:
+        with open('static/static_data/tickers.txt', 'r') as f:
+            stocks = f.readlines()[0].split(',')
+        for i in range(min(len(stocks), 20)):
+            keyboard.add_button(stocks[i], color=VkKeyboardColor.PRIMARY)
+            if i % 4 == 3 and i != len(stocks) - 1:
                 keyboard.add_line()
     else:
         keyboard.add_button('Вернуться в меню', color=VkKeyboardColor.DEFAULT)
@@ -177,9 +183,8 @@ def check_date_selection(vk, uid, text):
         data_of_one_curr = data_of_one_curr_for_a_per(date_from, date_to,
                                                       users_data[uid]['currency'][0])["ValCurs"]["Record"]
         data_of_one_curr = list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data_of_one_curr))
-    except Exception as s:
-        print(s)
-        raise MessageError
+    except Exception:
+        raise DateError
     vk.messages.send(user_id=uid, random_id=get_random_id(), message='подождите, собираю информацию🔎')
     name = from_id_to_name(users_data[uid]['currency'][0])
     code = users_data[uid]['currency'][1]
@@ -234,7 +239,7 @@ def mailing_check_number(vk, uid, text):
     except Exception:
         raise MessageError
     vk.messages.send(user_id=uid, message="Изменение за какой период следует отслеживать?",
-                     random_id=get_random_id(), keyboard=generate_keyboard(5).get_keyboard())
+                     random_id=get_random_id(), keyboard=generate_keyboard(52).get_keyboard())
     users_data[uid]["state"] = 52
 
 
@@ -338,23 +343,32 @@ def show_stocks(vk, uid):
 
 def stocks_ticker(vk, uid, text):
     text = text.rstrip().lstrip().upper()
-    if text not in STOCKS:
+    if text not in stocks:
         raise MessageError
     users_data[uid]['temporary'] = {}
     users_data[uid]['temporary']['ticker'] = text
     users_data[uid]['state'] = 31
-    vk.messages.send(user_id=uid, keyboard=generate_keyboard(0).get_keyboard(), random_id=get_random_id(),
-                     message=f'📅 Введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd/mm/YY-dd/mm/YY')
+    vk.messages.send(user_id=uid, keyboard=generate_keyboard(31).get_keyboard(), random_id=get_random_id(),
+                     message=f'📅 Получите данные за последнюю неделю, месяц, год или введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd.mm.YYYY-dd.mm.YYYY')
 
 
 def stocks_date(vk, uid, text):
     ticker = users_data[uid]['temporary']['ticker']
+    text = text.lstrip().rstrip().lower()
+    d = {'неделя': 7, 'месяц': 30, 'год': 365}
     try:
-        date_from, date_to = map(lambda x: '-'.join(x.split('/')[::-1]), text.lstrip().rstrip().split('-'))
+        if text in d:
+            date_to = datetime.date.today().strftime('%d/%m/%Y')
+            date_from = (datetime.date.today() - datetime.timedelta(days=d[text])).strftime('%d/%m/%Y')
+        else:
+            date_from, date_to = text.replace('.', '/').split('-')
+            datetime.datetime.strptime(date_from, '%d/%m/%Y')
+            datetime.datetime.strptime(date_to, '%d/%m/%Y')
+        date_from, date_to = map(lambda x: '-'.join(x.split('/')[::-1]), [date_from, date_to])
         vk.messages.send(user_id=uid, random_id=get_random_id(), message='подождите, собираю информацию🔎')
         data_ = yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4]
-    except Exception:
-        raise MessageError
+    except Exception as s:
+        raise DateError
     open_ = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['Open'].values.tolist()]))
     high = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['High'].values.tolist()]))
     low = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['Low'].values.tolist()]))
@@ -366,7 +380,7 @@ def stocks_date(vk, uid, text):
              {'name': ticker, 'chart_name': ticker + ' Close', 'data': close}]
     create(data_, filename=filename)
     users_data[uid]['filename'] = filename
-    users_data[uid]['temporary']['count'] = 4
+    users_data[uid]['count'] = 4
 
 
 def type_selection(vk, uid, text):
@@ -495,12 +509,16 @@ def main():
                     menu(vk, uid)
                 else:
                     raise MessageError
+            except DateError:
+                keyboard = generate_keyboard(users_data[uid]["state"])
+                vk.messages.send(user_id=uid, message='Это не похоже на корректную дату. Попробуй еще раз',
+                                 random_id=get_random_id(), keyboard=keyboard.get_keyboard())
             except GeoError:
                 vk.messages.send(user_id=uid,
                                  message='Пожалуйста, воспользуйся кнопочкой для выбора местоположения🗺📍',
                                  random_id=get_random_id(), keyboard=generate_keyboard(71).get_keyboard())
             except MessageError:
-                keyboard = generate_keyboard(users_data[uid])
+                keyboard = generate_keyboard(users_data[uid]["state"])
                 vk.messages.send(user_id=uid, message='Я тебя не понимаю. Попробуй еще раз или вернись в меню',
                                  random_id=get_random_id(), keyboard=keyboard.get_keyboard())
             except Exception as s:
@@ -547,6 +565,9 @@ schedule.every().day.at("06:00").do(load_new_data)
 schedule.every().day.at("12:00").do(load_new_data)
 schedule.every().day.at("18:00").do(load_new_data)
 schedule.every().day.at("12:10").do(mailing_main)
+
+# schedule.every().hour.at(":00").do(mailing_main)
+# schedule.every().hour.at(":30").do(mailing_main)
 t = threading.Thread(target=go)
 t.start()
 
