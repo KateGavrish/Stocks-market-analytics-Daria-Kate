@@ -77,13 +77,13 @@ def generate_keyboard(n):
     elif n == 21:
         keyboard.add_button('добавить', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
-        keyboard.add_button('🔙', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('\U0001F519', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
         keyboard.add_button('отписаться от одной', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('отписаться от всех', color=VkKeyboardColor.PRIMARY)
     elif n == 70:
         keyboard.add_button('банк', color=VkKeyboardColor.PRIMARY)
-        keyboard.add_button('🔙', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('\U0001F519', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('банкомат', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
         keyboard.add_button('обмен валюты', color=VkKeyboardColor.PRIMARY)
@@ -131,30 +131,30 @@ def menu(vk, uid):
 
 
 def show_help(response, vk, uid):
-    vk.messages.send(user_id=uid, message=f'''📚Помощь📚
+    vk.messages.send(user_id=uid, message=f'''\U0001F4DAПомощь\U0001F4DA
 Привет, {response[0]['first_name']}
 В меню тебя встречает много кнопочек. давай посмотрим, что они умеют:
 
-1️⃣ "Валюта" отвечает за получение различной информации о курсе валют:
-🔸 "Текущий курс" покажет тебе список всех валют, которые я знаю, и их текущий курс
-🔸 "Выбрать валюту" поможет получить данные о какой-либо валюте за выбранный период. Ты же не против excel? Все, что тебе нужно, - это выбрать валюту (я дам тебе список тех, что знаю, и ты введешь мне номер в списке) и период (например, 01/04/2020-01/05/2020)
+\U00000031\U000020E3 "Валюта" отвечает за получение различной информации о курсе валют:
+\U0001F538 "Текущий курс" покажет тебе список всех валют, которые я знаю, и их текущий курс
+\U0001F538 "Выбрать валюту" поможет получить данные о какой-либо валюте за выбранный период. Ты же не против excel? Все, что тебе нужно, - это выбрать валюту (я дам тебе список тех, что знаю, и ты введешь мне номер в списке) и период (например, 01/04/2020-01/05/2020)
 
-2️⃣ "Организации" отыщет ближайшие банки, банкоматы или пункты обмена валют
-🔸 выбери тип организации и укажи местоположение
+\U00000032\U000020E3 "Организации" отыщет ближайшие банки, банкоматы или пункты обмена валют
+\U0001F538 выбери тип организации и укажи местоположение
 
-3️⃣ "Акции" поможет получить данные о акциях за выбранный период. аналогично действию "Выбор валюты"
+\U00000033\U000020E3 "Акции" поможет получить данные о акциях за выбранный период. аналогично действию "Выбор валюты"
 
-4️⃣ "Рассылка" может сообщить тебе, когда курс какой-либо валюты вырастет или понизится на более чем на р процентов
-🔸 "Добавить" начнет добавление новой подписки. Выбери валюту, период, за который нужно смотреть изменение (день или неделя), и сам процент изменения
-🔸 "Отписаться от всех" удалит все твои подписки на рассылку
-🔸 "Отписаться от одной" покажет список всех твоих подписок с возможностью удаления одной или нескольких из них''',
+\U00000034\U000020E3 "Рассылка" может сообщить тебе, когда курс какой-либо валюты вырастет или понизится на более чем на р процентов
+\U0001F538 "Добавить" начнет добавление новой подписки. Выбери валюту, период, за который нужно смотреть изменение (день или неделя), и сам процент изменения
+\U0001F538 "Отписаться от всех" удалит все твои подписки на рассылку
+\U0001F538 "Отписаться от одной" покажет список всех твоих подписок с возможностью удаления одной или нескольких из них''',
                      random_id=get_random_id(), keyboard=generate_keyboard(2).get_keyboard())
 
 
 def choose_currency(vk, uid):
     currency = [str(n + 1) + ' ' + flags.get(item["CharCode"][:2], " ") + f'{item["CharCode"]}' for n, item in
                 enumerate(data)]
-    vk.messages.send(user_id=uid, message='🌐 Выберите валюту\n' + '\n'.join(currency),
+    vk.messages.send(user_id=uid, message='\U0001F310 Выберите валюту\n' + '\n'.join(currency),
                      random_id=get_random_id(), keyboard=generate_keyboard(0).get_keyboard())
     users_data[uid]['state'] = 41
 
@@ -167,7 +167,7 @@ def check_the_currency_selection(vk, uid, text):
         raise MessageError
     users_data[uid]['state'] = 42
     vk.messages.send(user_id=uid,
-                     message=f'📅 Получите данные за последнюю неделю, месяц, год или введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd.mm.YYYY-dd.mm.YYYY',
+                     message=f'\U0001F4C5 Получите данные за последнюю неделю, месяц, год или введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd.mm.YYYY-dd.mm.YYYY',
                      random_id=get_random_id(), keyboard=generate_keyboard(42).get_keyboard())
 
 
@@ -185,7 +185,7 @@ def check_date_selection(vk, uid, text):
         data_of_one_curr = list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data_of_one_curr))
     except Exception:
         raise DateError
-    vk.messages.send(user_id=uid, random_id=get_random_id(), message='подождите, собираю информацию🔎')
+    vk.messages.send(user_id=uid, random_id=get_random_id(), message='подождите, собираю информацию\U0001F50E')
     name = from_id_to_name(users_data[uid]['currency'][0])
     code = users_data[uid]['currency'][1]
     filename = f'{code}_{date_from}_{date_to}'.replace('/', '-') + '.xlsx'
@@ -217,7 +217,7 @@ def show_all(vk, uid):
 
 
 def mailing(vk, uid):
-    vk.messages.send(user_id=uid, message='управление вашей подпиской 💸',
+    vk.messages.send(user_id=uid, message='управление вашей подпиской \U0001F4B8',
                      random_id=get_random_id(), keyboard=generate_keyboard(21).get_keyboard())
     users_data[uid]['state'] = 50
 
@@ -349,7 +349,7 @@ def stocks_ticker(vk, uid, text):
     users_data[uid]['temporary']['ticker'] = text
     users_data[uid]['state'] = 31
     vk.messages.send(user_id=uid, keyboard=generate_keyboard(31).get_keyboard(), random_id=get_random_id(),
-                     message=f'📅 Получите данные за последнюю неделю, месяц, год или введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd.mm.YYYY-dd.mm.YYYY')
+                     message=f'\U0001F4C5 Получите данные за последнюю неделю, месяц, год или введите дату начала и конца периода, за который вы хотите увидеть информацию, в формате dd.mm.YYYY-dd.mm.YYYY')
 
 
 def stocks_date(vk, uid, text):
@@ -365,7 +365,7 @@ def stocks_date(vk, uid, text):
             datetime.datetime.strptime(date_from, '%d/%m/%Y')
             datetime.datetime.strptime(date_to, '%d/%m/%Y')
         date_from, date_to = map(lambda x: '-'.join(x.split('/')[::-1]), [date_from, date_to])
-        vk.messages.send(user_id=uid, random_id=get_random_id(), message='подождите, собираю информацию🔎')
+        vk.messages.send(user_id=uid, random_id=get_random_id(), message='подождите, собираю информацию\U0001F50E')
         data_ = yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4]
     except Exception as s:
         raise DateError
@@ -391,7 +391,7 @@ def type_selection(vk, uid, text):
     d = {'обмен валюты': 'пункты обмена валют', 'банк': 'банки', 'банкомат': 'банкоматы'}
     vk.messages.send(user_id=uid, random_id=get_random_id(),
                      keyboard=generate_keyboard(71).get_keyboard(),
-                     message=f'я найду ближайшие к вам {d[text]}💰 просто выберите ваше местоположение')
+                     message=f'я найду ближайшие к вам {d[text]}\U0001F4B0 просто выберите ваше местоположение')
     users_data[uid]['state'] = 71
 
 
@@ -433,7 +433,7 @@ def main():
             try:
                 if 'state' not in users_data[uid]:
                     new_user(response, vk, uid)
-                elif event.message.text.lower() in ['меню', 'вернуться в меню', '🔙']:
+                elif event.message.text.lower() in ['меню', 'вернуться в меню', '\U0001F519']:
                     menu(vk, uid)
                 elif users_data[uid]['state'] == 2:
                     if event.message.text.lower() == 'валюта':
@@ -504,7 +504,7 @@ def main():
                     unsubscribe(vk, uid, event.message.text)
                 elif users_data[uid]['state'] == 1000:
                     if 'да' in event.message.text.lower():
-                        vk.messages.send(user_id=uid, message='Полетели!\n' + '💸' * 1008,
+                        vk.messages.send(user_id=uid, message='Полетели!\n' + '\U0001F4B8' * 1008,
                                          random_id=get_random_id())
                     menu(vk, uid)
                 else:
@@ -515,7 +515,7 @@ def main():
                                  random_id=get_random_id(), keyboard=keyboard.get_keyboard())
             except GeoError:
                 vk.messages.send(user_id=uid,
-                                 message='Пожалуйста, воспользуйся кнопочкой для выбора местоположения🗺📍',
+                                 message='Пожалуйста, воспользуйся кнопочкой для выбора местоположения\U0001F5FA\U0001F4CD',
                                  random_id=get_random_id(), keyboard=generate_keyboard(71).get_keyboard())
             except MessageError:
                 keyboard = generate_keyboard(users_data[uid]["state"])
@@ -523,7 +523,7 @@ def main():
                                  random_id=get_random_id(), keyboard=keyboard.get_keyboard())
             except Exception as s:
                 print(s)
-                vk.messages.send(user_id=uid, message='⚠Что-то пошло не так,но мы все исправим⚠',
+                vk.messages.send(user_id=uid, message='\U000026A0Что-то пошло не так,но мы все исправим\U000026A0',
                                  random_id=get_random_id())
                 menu(vk, uid)
 
@@ -540,10 +540,10 @@ def mailing_main():
     for item in all_:
         try:
             if float(mailing[item["period"]][item["currency"]]) >= item["percent"] >= 0:
-                message = f"❗ за {d[item['period']]} курс {item['code']} вырос на {mailing[item['period']][item['currency']]}% ❗"
+                message = f"\U00002757 за {d[item['period']]} курс {item['code']} вырос на {mailing[item['period']][item['currency']]}% \U00002757"
                 vk.messages.send(user_id=item['uid'], random_id=get_random_id(), message=message)
             elif float(mailing[item["period"]][item["currency"]]) <= item["percent"] <= 0:
-                message = f"❗ за {d[item['period']]} курс {item['code']} понизился на {abs(float(mailing[item['period']][item['currency']]))}% ❗"
+                message = f"\U00002757 за {d[item['period']]} курс {item['code']} понизился на {abs(float(mailing[item['period']][item['currency']]))}% \U00002757"
                 vk.messages.send(user_id=item['uid'], random_id=get_random_id(), message=message)
         except Exception:
             pass
