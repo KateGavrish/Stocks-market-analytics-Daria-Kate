@@ -40,7 +40,7 @@ def abort_if_users_not_found(user_id):
 
 def abort_if_items_not_found(item_id):
     session = create_session()
-    user = session.query(User).get(item_id)
+    user = session.query(Items).get(item_id)
     if not user:
         return 'NO'
     return 'OK'

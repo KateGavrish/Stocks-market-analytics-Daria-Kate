@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="margin: 20px auto; text-align: center; padding-left: 40%;">
+<div style="margin: 20px auto; text-align: center; padding-left: 20%;">
     <form action="" method="post">
         {{ form.hidden_tag() }}
         {{ form.csrf_token }}
-        <p style="float: left;">
-            {{ form.search(class="form-control") }}<br>
+        <p style="float: left; width: 60%;">
+            {{ form.search(class="form-control", placeholder="Не нашли то, что искали? попробуйте ввести тикер") }}<br>
             {% for error in form.search.errors %}
         <p class="alert alert-danger" role="alert">
             {{ error }}
@@ -27,11 +27,11 @@
     </tr>
     {% for item in params %}
         <tr>
-            <td><a href="/stocks/{{ item[0] }}">{{ item[0] }}</a></td>
-            <td>{{ item[1] }}</td>
-            <td>{{ item[2] }}</td>
-            <td>{{ item[3] }}</td>
-            <td>{{ item[4] }}</td>
+            <td class="stocks"><a href="/stocks/{{ item[0] }}" class="black-link">{{ item[0] }}</a></td>
+            <td class="stocks">{{ item[1] }}</td>
+            <td class="stocks">{{ item[2] }}</td>
+            <td class="stocks">{{ item[3] }}</td>
+            <td class="stocks">{{ item[4] }}</td>
         </tr>
     {% endfor %}
 </table>

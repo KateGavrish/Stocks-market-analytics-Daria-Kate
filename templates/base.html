@@ -13,23 +13,33 @@
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <h1 class="navbar-brand" href="#">Stocks market analytics</h1>
+        <ul class="navbar-nav mr-auto">
+            <li>
+                <a class="btn btn-light" href="/">Валюты</a>
+            </li>
+            <li>
+                <a class="btn btn-light" href="/stocks">Акции</a>
+            </li>
+            {% if current_user.is_authenticated %}
+                <li>
+                    <a class="btn btn-light" href="/account">Личный кабинет</a>
+                </li>
+            {% endif %}
+        </ul>
         {% if current_user.is_authenticated %}
-        <p>
-            <a class="navbar-brand" href="/logout">{{ current_user.name }} {{ current_user.surname }}</a>
-            <a class="btn btn-primary" href="/account">Личный кабинет</a>
-            <a class="btn btn-success" href="/">Главная</a>
-        </p>
+            <p>
+                <a class="navbar-brand" href="/logout">{{ current_user.name }} {{ current_user.surname }}</a>
+            </p>
         {% else %}
             <p>
-                <a class="btn btn-primary" href="/register">Зарегистрироваться</a>
-                <a class="btn btn-success" href="/login">Войти</a>
+                <a class="btn btn-outline-primary" href="/register">Зарегистрироваться</a>
+                <a class="btn btn-outline-success" href="/login">Войти</a>
             </p>
         {% endif %}
     </nav>
     <main role="main" class="container">
-        <a class="btn btn-success" href="/stocks">Акции</a>
         {% block content %}{% endblock %}
     </main>
 </body>

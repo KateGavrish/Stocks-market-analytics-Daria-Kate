@@ -11,7 +11,13 @@ from api.data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
 from scripts.functions import *
-from scripts.excel_func import create_excel_chart
+from scripts.excel_func import create
+
+import schedule
+import threading
+from shutil import rmtree
+from os.path import abspath
+from os import mkdir
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -24,6 +30,7 @@ charts = GoogleCharts(app)
 HOST = 'https://api-stocks-kate-daria.herokuapp.com/'
 with open('static/static_data/tickers.txt', 'r') as f:
     a = f.readlines()[0].split(',')
+# HOST = getenv("HOST", "")
 
 
 @login_manager.user_loader
@@ -190,7 +197,8 @@ def download_file(filename):
     cur_id, name = from_code_to_id(code, True)
     data = data_of_one_curr_for_a_per(date_from, date_to, cur_id)["ValCurs"]["Record"]
     data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
-    create_excel_chart(name, code, data[1:], filename)  # создание excel файла
+    data_ = [{'name': code, 'chart_name': name, 'data': data[1:]}]
+    create(data_, filename)  # создание excel файла
     return send_from_directory('static/excel', filename, as_attachment=True)
 
 
@@ -283,6 +291,24 @@ def edit_preferences():
 @app.route('/news')
 def news():
     pass
+
+
+def go():
+    while True:
+        schedule.run_pending()
+
+
+def clear_excel():
+    try:
+        rmtree(abspath('static/excel'))
+        mkdir('static/excel')
+    except Exception as s:
+        pass
+
+
+schedule.every().hour.at(':00').do(clear_excel)
+t = threading.Thread(target=go)
+t.start()
 
 
 if __name__ == '__main__':
