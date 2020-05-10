@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, request, send_from_directory
-from requests import get, post
+from requests import get, post, put, delete
 import pandas as pd
 from fbprophet import Prophet
 from api.data import db_session
@@ -248,7 +248,7 @@ def login():
             login_user(user, remember=form.remember_me.data)
             return redirect("/")
         except Exception as e:
-            return render_template('login.html', message=e, form=form)
+            return render_template('login.html', message='', form=form)
     else:
         return render_template('login.html', title='Авторизация', form=form)
 
@@ -260,7 +260,40 @@ def logout():
     return redirect("/")
 
 
+@app.route('/edit_password', methods=['GET', 'POST'])
+@login_required
+def edit_password():
+    form = EditPassword()
+    if form.validate_on_submit():
+        old_pass = form.old_password.data
+        new_pass = form.new_password.data
+        user = get(f'{HOST}/api/users/login/{current_user.email}/{old_pass}').json()
+        if 'error' not in user:
+            put(f'{HOST}/api/users/{current_user.id}', json={
+                'name': user['users']['name'], 'surname': user['users']['surname'], 'email': user['users']['email'],
+                'password': new_pass}).json()
+            return render_template('edit_password.html', form=form, message='ваш пароль успешно изменен')
+        else:
+            return render_template('edit_password.html', form=form, message='неправильный текущий пароль')
+    return render_template('edit_password.html', form=form)
+
+
+@app.route('/delete_account', methods=['GET', 'POST'])
+@login_required
+def delete_account():
+    form = DeleteForm()
+    if form.validate_on_submit():
+        user = get(f'{HOST}/api/users/login/{current_user.email}/{form.password.data}').json()
+        if 'error' not in user:
+            delete(f'{HOST}/api/users/{current_user.id}').json()
+            return redirect('/')
+        else:
+            return render_template('delete_account.html', form=form, message='неправильный пароль')
+    return render_template('delete_account.html', form=form)
+
+
 @app.route('/account', methods=['GET', 'POST'])
+@login_required
 def user_account():
     date = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
     list_id_curr = get(f'{HOST}/api/items_of_user/{current_user.id}').json()

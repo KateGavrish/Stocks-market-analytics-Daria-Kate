@@ -46,3 +46,14 @@ class EditPreferencesForm(FlaskForm):
 class Search(FlaskForm):
     search = StringField('Поиск', validators=[DataRequired()])
     submit = SubmitField('Найти')
+
+
+class EditPassword(FlaskForm):
+    old_password = PasswordField('текущий пароль', validators=[DataRequired()])
+    new_password = PasswordField('новый пароль', validators=[DataRequired()])
+    submit = SubmitField('Изменить')
+
+
+class DeleteForm(FlaskForm):
+    password = PasswordField('для удаления аккаунта введите пароль', validators=[DataRequired()])
+    submit = SubmitField('Удалить')

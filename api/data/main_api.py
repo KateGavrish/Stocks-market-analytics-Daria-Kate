@@ -71,6 +71,19 @@ class UsersResource(Resource):
             session.commit()
             return jsonify({'success': 'OK'})
 
+    def put(self, user_id):
+        a = abort_if_users_not_found(user_id)
+        if a == 'OK':
+            args = parser.parse_args()
+            session = create_session()
+            user = session.query(User).get(user_id)
+            user.name = args['name']
+            user.surname = args['surname']
+            user.email = args['email']
+            user.set_password(args['password'])
+            session.commit()
+            return jsonify({'success': 'OK'})
+
 
 class UsersListResource(Resource):
     def get(self):
@@ -212,6 +225,8 @@ def user_login(email, password):
         return jsonify({'error': 'Not found'})
     if user.check_password(password):
         return jsonify({'users': user.to_dict(only=('name', 'surname', 'email', 'id', 'hashed_password'))})
+    else:
+        return jsonify({'error': 'Wrong password'})
 
 
 @blueprint.route('/api/users/load/<int:user_id>',  methods=['GET'])
