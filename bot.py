@@ -13,15 +13,15 @@ from os import getenv
 import yfinance as yf
 import pandas as pd
 
-from config import TOKEN_VK, GROUP_ID
+# from config import TOKEN_VK, GROUP_ID
 from scripts.functions import *
 from scripts.excel_func import create
 from scripts.maps import *
 
-HOST = 'https://api-stocks-kate-daria.herokuapp.com'
-# HOST = getenv("HOST", "")
-# TOKEN_VK = getenv("TOKEN_VK", "")
-# GROUP_ID = getenv("GROUP_ID", "")
+# HOST = 'https://api-stocks-kate-daria.herokuapp.com'
+HOST = getenv("HOST", "")
+TOKEN_VK = getenv("TOKEN_VK", "")
+GROUP_ID = getenv("GROUP_ID", "")
 
 users_data = {}
 flags = {'AU': '🇦🇺', 'AZ': '🇦🇿', 'GB': '🇬🇧', 'AM': '🇦🇲', 'BY': '🇧🇾', 'BG': '🇧🇬', 'BR': '🇧🇷', 'HU': '🇭🇺',
