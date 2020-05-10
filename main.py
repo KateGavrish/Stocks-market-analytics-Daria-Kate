@@ -11,6 +11,7 @@ from api.data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
 from scripts.functions import *
+from scripts.forex import *
 from scripts.excel_func import create
 
 import schedule
@@ -22,18 +23,18 @@ from os import mkdir, getenv
 from scripts.parser import parse_news
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = getenv("SECRET_KEY", "")
+app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 charts = GoogleCharts(app)
 
-# HOST = 'https://api-stocks-kate-daria.herokuapp.com/'
+HOST = 'https://api-stocks-kate-daria.herokuapp.com/'
 with open('static/static_data/tickers.txt', 'r') as f:
     a = f.readlines()[0].split(',')
 
 
-HOST = getenv("HOST", "")
+# HOST = getenv("HOST", "")
 
 
 @login_manager.user_loader
@@ -215,7 +216,7 @@ def download_csv_stocks(filename, ticker, date_from, date_to):
 
 
 @app.route('/register', methods=['GET', 'POST'])
-def reqister():
+def register():
     form = RegisterForm()
     if request.method == 'POST' and form.validate_on_submit():
         if form.password.data != form.password_again.data:
@@ -327,8 +328,44 @@ def edit_preferences():
 @app.route('/news')
 def news():
     news = parse_news()
+    return render_template('news.html', news=news, date=datetime.datetime.today().strftime('%d.%m.%Y'))
 
-    return render_template('news.html', news=news)
+
+@app.route('/calculate', methods=['GET', 'POST'])
+def calc():
+    form1 = CalcForm()
+    form2 = ConvertForm()
+    count1 = ''
+    count2 = ''
+    n = ''
+    new = ''
+    new_curr = ''
+    if request.method == 'POST' and form1.validate_on_submit():
+        try:
+            date2 = form1.date1.data.strftime('%Y-%m-%d')
+            date1 = form1.date2.data.strftime('%Y-%m-%d')
+            base_curr = form1.v1.data
+            new_curr = form1.v2.data
+            amount1 = float(form1.amount1.data.replace(',', '.'))
+            amount2 = float(form1.amount2.data.replace(',', '.'))
+            count1 = first_to_second(date1, base_curr, new_curr, amount1)
+            count2 = first_to_second(date2, base_curr, new_curr, amount2)
+            n = "{0:.3f}".format(count2 / count1)
+        except:
+            pass
+
+    if request.method == 'POST' and form2.validate_on_submit():
+        try:
+            base_curr = form2.v1.data
+            new_curr = form2.v2.data
+            amount = float(form2.amount.data.replace(',', '.'))
+            count = first_to_second(datetime.datetime.today().strftime('%Y-%m-%d'), base_curr, new_curr, amount)
+            new = "{0:.3f}".format(count)
+        except:
+            pass
+
+    return render_template('calc.html', form1=form1, form2=form2, count1=count1, n=n,
+                           count2=count2, new=new, new_curr=new_curr)
 
 
 def go():
@@ -340,8 +377,6 @@ def clear_excel():
     try:
         rmtree(abspath('static/excel'))
         mkdir('static/excel')
-        rmtree(abspath('static/img/charts'))
-        mkdir('static/img/charts')
     except Exception as s:
         pass
 
@@ -353,20 +388,21 @@ t.start()
 
 def load_data():
     for ticker in a:
-        trend_df = yf.download(ticker, start='2010-01-05')
-        predictions = 60
-        train_df = trend_df[:-predictions]
-        train_df.reset_index(inplace=True)
-        train_df.rename(columns={'Date': 'ds', 'Close': 'y', 'High': 'yhat_upper', 'Low': 'yhat_lower'}, inplace=True)
-        m = Prophet(changepoint_prior_scale=0.1)
-        m.fit(train_df)
-        future = m.make_future_dataframe(periods=300)
-        m.predict(future)[['ds', 'yhat_upper', 'yhat', 'yhat_lower']].tail(200).to_csv(
-            f'static/static_data/{ticker}.csv')
+        try:
+            trend_df = yf.download(ticker, start='2010-01-05')
+            predictions = 60
+            train_df = trend_df[:-predictions]
+            train_df.reset_index(inplace=True)
+            train_df.rename(columns={'Date': 'ds', 'Close': 'y', 'High': 'yhat_upper', 'Low': 'yhat_lower'}, inplace=True)
+            m = Prophet(changepoint_prior_scale=0.1)
+            m.fit(train_df)
+            future = m.make_future_dataframe(periods=300)
+            m.predict(future)[['ds', 'yhat_upper', 'yhat', 'yhat_lower']].tail(200).to_csv(
+                f'static/static_data/{ticker}.csv')
+        except:
+            pass
 
 
 schedule.every().day.at('00:00').do(load_data)
 t = threading.Thread(target=go)
 t.start()
-if __name__ == '__main__':
-    app.run()

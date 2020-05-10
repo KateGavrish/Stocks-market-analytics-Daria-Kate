@@ -90,3 +90,13 @@ def list_of_tuples_id_and_name():
         a.append((i['@ID'], i["Name"]))
 
     return a
+
+
+def list_of_tuples_name():
+    a = []
+    with open('static/static_data/code_of_currency_with_iso_char_code.json', 'r', encoding='utf-8-sig') as f:
+        resp = json.loads(f.read())
+    for i in resp['Valuta']['Item']:
+        a.append((i["ISO_Char_Code"], i["ISO_Char_Code"]))
+
+    return a
