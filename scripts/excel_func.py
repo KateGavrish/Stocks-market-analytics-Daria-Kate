@@ -1,5 +1,5 @@
 import xlsxwriter
-import excel2img
+from matplotlib import pyplot as plt
 
 
 def create(data, filename='chart.xlsx'):
@@ -25,17 +25,11 @@ def create(data, filename='chart.xlsx'):
         chart.set_title({'name': data[i]['chart_name']})
         worksheet.insert_chart(f + '1', chart)
 
-        chart = workbook.add_chart({'type': 'line'})
-        chart.add_series(
-            {'values': f'=Sheet1!{s}20:{s}{19 + len(values)}', 'categories': f'=Sheet1!{f}20:{f}{19 + len(categories)}',
-             'name': data[i]['name']})
-        chart.set_title({'name': data[i]['chart_name']})
-        chartsheet = workbook.add_chartsheet()
-        chartsheet.set_chart(chart)
-        chartsheet.activate()
+        plt.plot(categories, values, label=data[i]['name'])
+        plt.title(data[i]['chart_name'])
+        plt.gcf().autofmt_xdate()
+        plt.legend(loc='best')
+        plt.savefig(f'static/img/charts/{filename.split(".")[0]}_{i + 1}.png')
+        plt.close()
 
     workbook.close()
-
-    for i in range(len(data)):
-        excel2img.export_img(f"static/excel/{filename}",
-                             f"static/img/charts/{filename.split('.')[0]}_{i + 1}.png", f"Chart{i + 1}", None)
