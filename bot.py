@@ -406,9 +406,17 @@ def search_for_banks(vk, vk_session, uid, geo):
     for i in range(len(banks)):
         pt.append(f'{",".join(list(map(str, banks[i]["geometry"]["coordinates"])))},pm2blm{i + 1}')
         bank = banks[i]["properties"]["CompanyMetaData"]
+        try:
+            hours = bank["Hours"]["text"]
+        except Exception:
+            hours = ''
+        try:
+            phone = bank['Phones'][0]["formatted"]
+        except Exception:
+            phone = ''
         message.append('\n'.join(
-            [f'{i + 1}. {bank["name"]}', 'Адрес: ' + bank["address"], 'телефон: ' + bank['Phones'][0]["formatted"],
-             'режим работы: ' + bank["Hours"]["text"]]))
+            [f'{i + 1}. {bank.get("name", "")}', 'Адрес: ' + bank.get("address", ""), 'телефон: ' + phone,
+             'режим работы: ' + hours]))
     if show_map(pt):
         upload = vk_api.VkUpload(vk_session)
         photo = upload.photo_messages('static/img/map.png')[0]
@@ -545,8 +553,8 @@ def mailing_main():
             elif float(mailing[item["period"]][item["currency"]]) <= item["percent"] <= 0:
                 message = f"\U00002757 за {d[item['period']]} курс {item['code']} понизился на {abs(float(mailing[item['period']][item['currency']]))}% \U00002757"
                 vk.messages.send(user_id=item['uid'], random_id=get_random_id(), message=message)
-        except Exception:
-            pass
+        except Exception as s:
+            print(s)
 
 
 def load_new_data():
@@ -564,10 +572,10 @@ def go():
 schedule.every().day.at("06:00").do(load_new_data)
 schedule.every().day.at("12:00").do(load_new_data)
 schedule.every().day.at("18:00").do(load_new_data)
-schedule.every().day.at("12:10").do(mailing_main)
+# schedule.every().day.at("12:10").do(mailing_main)
 
-# schedule.every().hour.at(":00").do(mailing_main)
-# schedule.every().hour.at(":30").do(mailing_main)
+schedule.every().hour.at(":00").do(mailing_main)
+schedule.every().hour.at(":30").do(mailing_main)
 t = threading.Thread(target=go)
 t.start()
 
