@@ -4,12 +4,12 @@
 <h1>Новости</h1>
 {% for item in news%}
 <div class="col-md6 border rounded">
-    <h3>{{item.title}}</h3>
+    <h3><a href="{{ item.link }}">{{item.title}}</a></h3>
     <div>
         {{item.content}}
     </div>
     <div>
-        Источник - {{item.user.name}}, Дата написания - {{item.created_date}}
+        {{item.time}}
     </div>
 </div>
 {% endfor %}
