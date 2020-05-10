@@ -10,20 +10,19 @@ def xml_to_json(xml_file):
     return json_data
 
 
-def daily_data_of_all_change(list_id_curr):
+def daily_data_of_all_change(list_id_curr, period=7):
     dict_of_delta = dict()
     for id_curr in list_id_curr:
-
-        date1 = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
-        date2 = datetime.date(2020, 3, 1).strftime('%d/%m/%Y')
-
-        a = data_of_one_curr_for_a_per(date2, date1, id_curr)
+        # date1 = datetime.date(2020, 2, 28).strftime('%d/%m/%Y')
+        # date2 = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
+        date2 = datetime.date.today().strftime('%d/%m/%Y')
+        date1 = (datetime.date.today() - datetime.timedelta(days=period)).strftime('%d/%m/%Y')
+        a = data_of_one_curr_for_a_per(date1, date2, id_curr)
         try:
-            dict_of_delta[id_curr] = str(float(a['ValCurs']['Record'][1]['Value'].replace(',', '.')) * 100 / float(a['ValCurs']['Record'][0]['Value'].replace(',', '.')) - 100)[:5]
+            dict_of_delta[id_curr] = str(float(a['ValCurs']['Record'][-1]['Value'].replace(',', '.')) * 100 / float(a['ValCurs']['Record'][0]['Value'].replace(',', '.')) - 100)[:5]
         except Exception as e:
-            print(e)
+            print(e, 1)
             dict_of_delta[id_curr] = 0
-
     return dict_of_delta
 
 
@@ -48,9 +47,8 @@ def data_of_one_curr_for_a_per(date_from, date_to, id_curr):
 def from_id_to_name(id):
     """По id возвращает название"""
 
-    with open('static/static_data/code_of_currency.json') as f:
-        score = f.read()
-    resp = json.loads(score)
+    with open('static/static_data/code_of_currency.json', 'r', encoding='utf-8-sig') as f:
+        resp = json.loads(f.read())
     for i in range(len(resp['Valuta']['Item'])):
         if resp['Valuta']['Item'][i]['@ID'] == id:
             return resp['Valuta']['Item'][i]['Name']
@@ -88,7 +86,16 @@ def list_of_tuples_id_and_name():
     with open('static/static_data/code_of_currency_with_iso_char_code.json', 'r', encoding='utf-8-sig') as f:
         resp = json.loads(f.read())
     for i in resp['Valuta']['Item']:
-
         a.append((i['@ID'], i["Name"]))
+
+    return a
+
+
+def list_of_tuples_name():
+    a = []
+    with open('static/static_data/code_of_currency_with_iso_char_code.json', 'r', encoding='utf-8-sig') as f:
+        resp = json.loads(f.read())
+    for i in resp['Valuta']['Item']:
+        a.append((i["ISO_Char_Code"], i["ISO_Char_Code"]))
 
     return a
