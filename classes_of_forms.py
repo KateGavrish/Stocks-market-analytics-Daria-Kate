@@ -3,10 +3,8 @@ from wtforms import SubmitField, StringField, PasswordField, BooleanField, DateF
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 import datetime
-
-from wtforms.widgets import ListWidget, CheckboxInput
-
 from scripts.functions import list_of_tuples_id_and_name
+from wtforms.widgets import ListWidget, CheckboxInput
 
 
 class LoginForm(FlaskForm):
@@ -23,7 +21,7 @@ class RegisterForm(FlaskForm):
     name = StringField('Имя пользователя', validators=[DataRequired()])
     surname = StringField('Фамилия пользователя', validators=[DataRequired()])
 
-    submit = SubmitField('Войти')
+    submit = SubmitField('Зарегистрироваться')
 
 
 class DateForm(FlaskForm):
@@ -43,3 +41,8 @@ class EditPreferencesForm(FlaskForm):
     example = MultiCheckboxField('Label', choices=files)
 
     submit = SubmitField('Сохранить')
+
+
+class Search(FlaskForm):
+    search = StringField('Поиск', validators=[DataRequired()])
+    submit = SubmitField('Найти')

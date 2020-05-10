@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="margin: 20px auto; text-align: center; padding-left: 20%;">
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        {{ form.csrf_token }}
+        <p style="float: left; width: 60%;">
+            {{ form.search(class="form-control", placeholder="Не нашли то, что искали? попробуйте ввести тикер") }}<br>
+            {% for error in form.search.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+        <p style="float: left;" >{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+        {{message}}
+    </form>
+    <div class="clearfix"></div>
+</div>
+<table>
+    <tr>
+        <th>Ticker</th>
+        <th>Open</th>
+        <th>High</th>
+        <th>Low</th>
+        <th>Close</th>
+    </tr>
+    {% for item in params %}
+        <tr>
+            <td class="stocks"><a href="/stocks/{{ item[0] }}" class="black-link">{{ item[0] }}</a></td>
+            <td class="stocks">{{ item[1] }}</td>
+            <td class="stocks">{{ item[2] }}</td>
+            <td class="stocks">{{ item[3] }}</td>
+            <td class="stocks">{{ item[4] }}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

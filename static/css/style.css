@@ -120,6 +120,9 @@ td.delta {
     text-align: center;
     color: red;
 }
+td.stocks {
+    text-align: center;
+}
 
 td.delta1 {
     text-align: center;
@@ -141,15 +144,32 @@ div.message {
     color: red;
 }
 
+
 form #example {
-    list-style-type: none;
-}
+     list-style-type: none;
+ }
 
-form #example li {
-    display: block;
-    width: 33%;
-    float: left;
-}
-main.container {
+ form #example li {
+     display: block;
+     width: 33%;
+     float: left;
+ }
+ main.container {
 
+ }
+
+.clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+form.login-form {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    max-width: 500px;
+    background-color: #f5f5f5;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    padding: 15px;
 }
