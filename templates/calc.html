@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form action="" method="post" class="login-form">
+    {{ form1.hidden_tag() }}
+    {{ form1.csrf_token }}
+    <p>
+        {{ form1.date2.label }}<br>
+        {{ form1.date2(class="form-control", type="date") }}<br>
+        {% for error in form1.date2.errors %}
+            <p class="alert alert-danger" role="alert">{{ error }}</p>
+        {% endfor %}
+
+        {{ form1.date1.label }}<br>
+        {{ form1.date1(class="form-control", type="date") }}<br>
+        {% for error in form1.date1.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+
+        {{ form1.v1.label }}<br>
+        {{ form1.v1(class="form-control") }}<br>
+        {% for error in form1.v1.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+
+        {{ form1.v2.label }}<br>
+        {{ form1.v2(class="form-control") }}<br>
+        {% for error in form1.v2.errors %}
+            <p class="alert alert-danger" role="alert">{{ error }}</p>
+        {% endfor %}
+
+        {{ form1.amount1.label }}<br>
+        {{ form1.amount1(class="form-control") }}<br>
+        {% for error in form1.amount1.errors %}
+            <p class="alert alert-danger" role="alert">{{ error }}</p>
+        {% endfor %}
+
+        {{ form1.amount2.label }}<br>
+        {{ form1.amount2(class="form-control") }}<br>
+        {% for error in form1.amount2.errors %}
+            <p class="alert alert-danger" role="alert">{{ error }}</p>
+        {% endfor %}
+    </p>
+
+    <p>{{ form1.submit(type="submit", class="btn btn-outline-secondary btn-block") }}</p>
+    {{message}}
+
+    <div>
+
+        Стоимость в базовой валюте раньше: {{ count1 }}<br>
+        Стоимость в базовой валюте сейчас: {{ count2 }}<br>
+        Стоимость изменилась в {{ n }} раз
+
+    </div>
+</form>
+
+<form action="" method="post" class="login-form">
+    {{ form2.hidden_tag() }}
+    {{ form2.csrf_token }}
+    <p>
+        {{ form2.v1.label }}<br>
+        {{ form2.v1(class="form-control") }}<br>
+        {% for error in form2.v1.errors %}
+        <p class="alert alert-danger" role="alert">
+            {{ error }}
+        </p>
+        {% endfor %}
+
+        {{ form2.v2.label }}<br>
+        {{ form2.v2(class="form-control") }}<br>
+        {% for error in form2.v2.errors %}
+            <p class="alert alert-danger" role="alert">{{ error }}</p>
+        {% endfor %}
+
+        {{ form2.amount.label }}<br>
+        {{ form2.amount(class="form-control") }}<br>
+        {% for error in form2.amount.errors %}
+            <p class="alert alert-danger" role="alert">{{ error }}</p>
+        {% endfor %}
+    </p>
+
+    <p>{{ form2.submit(type="submit", class="btn btn-outline-secondary btn-block") }}</p>
+    {{message}}
+
+    <div>
+        Стоимость в {{ new_curr }}: {{ new }}<br>
+    </div>
+</form>
+{% endblock %}
