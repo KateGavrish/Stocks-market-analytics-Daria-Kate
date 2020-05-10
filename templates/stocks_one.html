@@ -18,10 +18,13 @@
         <h1 class="navbar-brand" href="#">Stocks market analytics</h1>
         <ul class="navbar-nav mr-auto">
             <li>
-            <a class="btn btn-light" href="/">Валюты</a>
+                <a class="btn btn-light" href="/">Валюты</a>
             </li>
             <li>
-            <a class="btn btn-light" href="/stocks">Акции</a>
+                <a class="btn btn-light" href="/stocks">Акции</a>
+            </li>
+            <li>
+                <a class="btn btn-light" href="/news">Новости</a>
             </li>
             {% if current_user.is_authenticated %}
                 <li>
@@ -112,9 +115,11 @@
         <div class="my-chart1">{{ charts.high }}</div>
         <div class="my-chart1">{{ charts.low }}</div>
         <div class="my-chart1">{{ charts.close }}</div>
+        {% if i %}
         <div class="my-chart1">{{ charts.pred1 }}</div>
         <div class="my-chart1">{{ charts.pred2 }}</div>
         <div class="my-chart1">{{ charts.pred3 }}</div>
+        {% endif %}
     </div>
     <main role="main" class="container">
         {% block content %}{% endblock %}

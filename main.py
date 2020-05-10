@@ -1,15 +1,12 @@
-import time
-
 from flask import Flask, render_template, redirect, request, send_from_directory
 from requests import get, post
 import pandas as pd
-# from fbprophet import Prophet
+from fbprophet import Prophet
 from api.data import db_session
 from api.data.users import User
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_googlecharts import GoogleCharts, LineChart
 import yfinance as yf
-
 from api.data.selected_items import Items
 from classes_of_forms import *
 from datetime import datetime
@@ -22,9 +19,10 @@ from shutil import rmtree
 from os.path import abspath
 from os import mkdir
 
+from scripts.parser import parse_news
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
-
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -33,6 +31,8 @@ charts = GoogleCharts(app)
 HOST = 'https://api-stocks-kate-daria.herokuapp.com/'
 with open('static/static_data/tickers.txt', 'r') as f:
     a = f.readlines()[0].split(',')
+
+
 # HOST = getenv("HOST", "")
 
 
@@ -65,60 +65,59 @@ def stocks_one(ticker):
 
     msft = yf.Ticker(ticker)
     info = msft.info
-
-    trend_df = yf.download(ticker, start='2000-01-05')
-    predictions = 60
-    train_df = trend_df[:-predictions]
-    train_df.reset_index(inplace=True)
-    train_df.rename(columns={'Date': 'ds', 'Close': 'y', 'High': 'yhat_upper', 'Low': 'yhat_lower'}, inplace=True)
-    m = Prophet(changepoint_prior_scale=0.1)
-    m.fit(train_df)
-    future = m.make_future_dataframe(periods=300)
-    forecast = m.predict(future)[['ds', 'yhat_upper', 'yhat', 'yhat_lower']].tail(200)
+    try:
+        forecast = pd.read_csv(f'static/static_data/{ticker}.csv')
+        i = True
+    except:
+        forecast = []
+        i = False
 
     open = LineChart("open", options={'title': f'{ticker} Open', 'width': '100%'})
     high = LineChart("high", options={'title': f'{ticker} High', 'width': '100%'})
     low = LineChart("low", options={'title': f'{ticker} Low', 'width': '100%'})
     close = LineChart("close", options={'title': f'{ticker} Close', 'width': '100%'})
-    pred1 = LineChart("pred1", options={'title': f'{ticker} prediction High', 'width': '100%'})
-    pred2 = LineChart("pred2", options={'title': f'{ticker} prediction Close', 'width': '100%'})
-    pred3 = LineChart("pred3", options={'title': f'{ticker} prediction Low', 'width': '100%'})
+    if not forecast.empty:
+        pred1 = LineChart("pred1", options={'title': f'{ticker} prediction High', 'width': '100%'})
+        pred2 = LineChart("pred2", options={'title': f'{ticker} prediction Close', 'width': '100%'})
+        pred3 = LineChart("pred3", options={'title': f'{ticker} prediction Low', 'width': '100%'})
 
     open.add_column("string", "Дата")
     high.add_column("string", "Дата")
     low.add_column("string", "Дата")
     close.add_column("string", "Дата")
-    pred1.add_column("string", "Дата")
-    pred2.add_column("string", "Дата")
-    pred3.add_column("string", "Дата")
+    if not forecast.empty:
+        pred1.add_column("string", "Дата")
+        pred2.add_column("string", "Дата")
+        pred3.add_column("string", "Дата")
 
     open.add_column("number", "Open")
     high.add_column("number", "High")
     low.add_column("number", "Low")
     close.add_column("number", "Close")
-
-    pred1.add_column("number", "Prediction high")
-    pred2.add_column("number", "Prediction close")
-    pred3.add_column("number", "Prediction low")
+    if not forecast.empty:
+        pred1.add_column("number", "Prediction high")
+        pred2.add_column("number", "Prediction close")
+        pred3.add_column("number", "Prediction low")
 
     open.add_rows(list(zip(*[data.index] + [data['Open'].values.tolist()])))
     high.add_rows(list(zip(*[data.index] + [data['High'].values.tolist()])))
     low.add_rows(list(zip(*[data.index] + [data['Low'].values.tolist()])))
     close.add_rows(list(zip(*[data.index] + [data['Close'].values.tolist()])))
-
-    pred1.add_rows(list(zip(*[forecast['ds']] + [forecast['yhat_upper'].values.tolist()])))
-    pred2.add_rows(list(zip(*[forecast['ds']] + [forecast['yhat'].values.tolist()])))
-    pred3.add_rows(list(zip(*[forecast['ds']] + [forecast['yhat_lower'].values.tolist()])))
+    if not forecast.empty:
+        pred1.add_rows(list(zip(*[forecast['ds']] + [forecast['yhat_upper'].values.tolist()])))
+        pred2.add_rows(list(zip(*[forecast['ds']] + [forecast['yhat'].values.tolist()])))
+        pred3.add_rows(list(zip(*[forecast['ds']] + [forecast['yhat_lower'].values.tolist()])))
 
     charts.register(open)
     charts.register(high)
     charts.register(low)
     charts.register(close)
-    charts.register(pred1)
-    charts.register(pred2)
-    charts.register(pred3)
+    if not forecast.empty:
+        charts.register(pred1)
+        charts.register(pred2)
+        charts.register(pred3)
 
-    return render_template('stocks_one.html', form=form, message=message, ticker=ticker, info=info)
+    return render_template('stocks_one.html', form=form, message=message, ticker=ticker, info=info, i=i)
 
 
 @app.route('/stocks', methods=['GET', 'POST'])
@@ -139,6 +138,7 @@ def stocks():
             except Exception:
                 pass
         return b
+
     form = Search()
     date = (datetime.date.today() - datetime.timedelta(days=10)).strftime('%Y-%m-%d')
     if request.method == 'POST' and form.validate_on_submit():
@@ -201,7 +201,7 @@ def download_file(filename):
     data = data_of_one_curr_for_a_per(date_from, date_to, cur_id)["ValCurs"]["Record"]
     data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
     data_ = [{'name': code, 'chart_name': name, 'data': data[1:]}]
-    create(data_, filename)  # создание excel файла
+    # create(data_, filename)  # создание excel файла
     return send_from_directory('static/excel', filename, as_attachment=True)
 
 
@@ -291,6 +291,13 @@ def edit_preferences():
     return render_template('edit_preferences.html', form=form)
 
 
+@app.route('/news')
+def news():
+    news = parse_news()
+
+    return render_template('news.html', news=news)
+
+
 def go():
     while True:
         schedule.run_pending()
@@ -300,14 +307,33 @@ def clear_excel():
     try:
         rmtree(abspath('static/excel'))
         mkdir('static/excel')
+        rmtree(abspath('static/img/charts'))
+        mkdir('static/img/charts')
     except Exception as s:
         pass
 
 
-schedule.every().hour.at(':00').do(clear_excel)
+schedule.every().hour.at(':10').do(clear_excel)
 t = threading.Thread(target=go)
 t.start()
 
 
+def load_data():
+    for ticker in a:
+        trend_df = yf.download(ticker, start='2010-01-05')
+        predictions = 60
+        train_df = trend_df[:-predictions]
+        train_df.reset_index(inplace=True)
+        train_df.rename(columns={'Date': 'ds', 'Close': 'y', 'High': 'yhat_upper', 'Low': 'yhat_lower'}, inplace=True)
+        m = Prophet(changepoint_prior_scale=0.1)
+        m.fit(train_df)
+        future = m.make_future_dataframe(periods=300)
+        m.predict(future)[['ds', 'yhat_upper', 'yhat', 'yhat_lower']].tail(200).to_csv(
+            f'static/static_data/{ticker}.csv')
+
+
+schedule.every().day.at('00:00').do(load_data)
+t = threading.Thread(target=go)
+t.start()
 if __name__ == '__main__':
-    app.run(debug=True, port=8080, host='127.0.0.1')
+    app.run()
