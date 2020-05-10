@@ -322,11 +322,14 @@ def calc():
             pass
 
     if request.method == 'POST' and form2.validate_on_submit():
-        base_curr = form2.v1.data
-        new_curr = form2.v2.data
-        amount = float(form2.amount.data.replace(',', '.'))
-        count = first_to_second(datetime.datetime.today().strftime('%Y-%m-%d'), base_curr, new_curr, amount)
-        new = "{0:.3f}".format(count)
+        try:
+            base_curr = form2.v1.data
+            new_curr = form2.v2.data
+            amount = float(form2.amount.data.replace(',', '.'))
+            count = first_to_second(datetime.datetime.today().strftime('%Y-%m-%d'), base_curr, new_curr, amount)
+            new = "{0:.3f}".format(count)
+        except:
+            pass
 
     return render_template('calc.html', form1=form1, form2=form2, count1=count1, n=n,
                            count2=count2, new=new, new_curr=new_curr)
