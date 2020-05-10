@@ -201,7 +201,7 @@ def download_file(filename):
     data = data_of_one_curr_for_a_per(date_from, date_to, cur_id)["ValCurs"]["Record"]
     data = [['Дата', code]] + list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data))
     data_ = [{'name': code, 'chart_name': name, 'data': data[1:]}]
-    # create(data_, filename)  # создание excel файла
+    create(data_, filename)  # создание excel файла
     return send_from_directory('static/excel', filename, as_attachment=True)
 
 
