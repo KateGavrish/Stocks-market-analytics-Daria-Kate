@@ -7,8 +7,10 @@ from api.data.db_session import *
 from api.data.selected_items import Items
 from api.data.mailing import MailingItems
 
+from os import getenv
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+app.config['SECRET_KEY'] = getenv('SECRET_KEY')
 api = Api(app)
 
 parser = reqparse.RequestParser()
