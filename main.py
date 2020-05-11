@@ -306,6 +306,7 @@ def user_account():
         list_id_curr = [x[0] for x in list_of_tuples_id_and_name()]
         params = daily_data_of_all(date)["ValCurs"]["Valute"]
         delta = daily_data_of_all_change(list_id_curr)
+        print(params)
     return render_template('account.html', params=params, delta=delta)
 
 
