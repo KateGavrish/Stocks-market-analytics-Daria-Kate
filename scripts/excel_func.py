@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 
 
 def create(data, filename='chart.xlsx'):
+    """создает excel файл и графики"""
     workbook = xlsxwriter.Workbook(f'static/excel/{filename}')
     worksheet = workbook.add_worksheet()
 

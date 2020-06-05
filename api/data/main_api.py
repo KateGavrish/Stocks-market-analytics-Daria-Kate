@@ -152,13 +152,15 @@ class ItemsListResource(Resource):
 
 
 class MailingListResource(Resource):
-    def get(self):  # все подписки
+    def get(self):
+        """получение всех подписок всех пользователей"""
         session = create_session()
         items = session.query(MailingItems).all()
         session.close()
         return jsonify({'items': [item.to_dict(only=('currency', 'period', 'percent', 'uid', 'status', 'code')) for item in items]})
 
-    def post(self):  # добавить подписку
+    def post(self):
+        """добавление подписки"""
         args = parser.parse_args()
         session = create_session()
         item = MailingItems()
@@ -175,13 +177,15 @@ class MailingListResource(Resource):
 
 
 class MailingUserResource(Resource):
-    def get(self, user_id):  # возвращает все подписки пользователя
+    def get(self, user_id):
+        """получение всех подписок пользователя"""
         session = create_session()
         items = session.query(MailingItems).filter(MailingItems.uid == user_id).all()
         session.close()
         return jsonify({'items': [item.to_dict(only=('id', 'currency', 'period', 'percent', 'uid', 'status', 'code')) for item in items]})
 
-    def delete(self, user_id):  # отписаться от всех рассылок
+    def delete(self, user_id):
+        """отписывает пользователя от всех рассылок"""
         session = create_session()
         items = session.query(MailingItems).filter(MailingItems.uid == user_id).all()
         if items:
@@ -197,6 +201,7 @@ class MailingUserResource(Resource):
 
 class MailingResource(Resource):
     def delete(self, id_):
+        """удаляет подписку"""
         abort_if_mailing_not_found(id_)
         session = create_session()
         item = session.query(MailingItems).get(id_)

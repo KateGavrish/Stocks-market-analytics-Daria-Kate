@@ -13,15 +13,14 @@ from os import getenv
 import yfinance as yf
 import pandas as pd
 
-# from config import TOKEN_VK, GROUP_ID
 from scripts.functions import *
 from scripts.excel_func import create
 from scripts.maps import *
 
-# HOST = 'https://api-stocks-kate-daria.herokuapp.com'
 HOST = getenv("HOST", "")
 TOKEN_VK = getenv("TOKEN_VK", "")
 GROUP_ID = getenv("GROUP_ID", "")
+IMAGE_ID = getenv("IMAGE_ID", "")
 
 users_data = {}
 flags = {'AU': '🇦🇺', 'AZ': '🇦🇿', 'GB': '🇬🇧', 'AM': '🇦🇲', 'BY': '🇧🇾', 'BG': '🇧🇬', 'BR': '🇧🇷', 'HU': '🇭🇺',
@@ -47,14 +46,8 @@ class DateError(MyErrors):
     pass
 
 
-def auth_handler():
-    """ При двухфакторной аутентификации вызывается эта функция. """
-    key = input("Enter authentication code: ")
-    remember_device = True  # Если: True - сохранить, False - не сохранять.
-    return key, remember_device
-
-
 def generate_keyboard(n):
+    """генерирует клавиатуру"""
     global stocks
     keyboard = VkKeyboard(one_time=True)
     if n == 2:
@@ -115,6 +108,7 @@ def generate_keyboard(n):
 
 
 def new_user(response, vk, uid):
+    """приветствует нового пользователя и переходит в меню"""
     message = f"Привет, {response[0]['first_name']}!"
     vk.messages.send(user_id=uid,
                      message=message,
@@ -123,6 +117,7 @@ def new_user(response, vk, uid):
 
 
 def menu(vk, uid):
+    """главное меню"""
     users_data[uid]['state'] = 2
     keyboard = generate_keyboard(2)
     vk.messages.send(user_id=uid,
@@ -131,13 +126,14 @@ def menu(vk, uid):
 
 
 def show_help(response, vk, uid):
+    """помощь"""
     vk.messages.send(user_id=uid, message=f'''\U0001F4DAПомощь\U0001F4DA
 Привет, {response[0]['first_name']}
 В меню тебя встречает много кнопочек. давай посмотрим, что они умеют:
 
 \U00000031\U000020E3 "Валюта" отвечает за получение различной информации о курсе валют:
 \U0001F538 "Текущий курс" покажет тебе список всех валют, которые я знаю, и их текущий курс
-\U0001F538 "Выбрать валюту" поможет получить данные о какой-либо валюте за выбранный период. Ты же не против excel? Все, что тебе нужно, - это выбрать валюту (я дам тебе список тех, что знаю, и ты введешь мне номер в списке) и период (например, 01/04/2020-01/05/2020)
+\U0001F538 "Выбрать валюту" поможет получить данные о какой-либо валюте за выбранный период. Ты же не против excel? Все, что тебе нужно, - это выбрать валюту (я дам тебе список тех, что знаю, и ты введешь мне номер в списке) и период (например, 01.04.2020-01.05.2020)
 
 \U00000032\U000020E3 "Организации" отыщет ближайшие банки, банкоматы или пункты обмена валют
 \U0001F538 выбери тип организации и укажи местоположение
@@ -152,6 +148,7 @@ def show_help(response, vk, uid):
 
 
 def choose_currency(vk, uid):
+    """валюта. выводит список всех валют и предлагает пользователю выбрать номер"""
     currency = [str(n + 1) + ' ' + flags.get(item["CharCode"][:2], " ") + f'{item["CharCode"]}' for n, item in
                 enumerate(data)]
     vk.messages.send(user_id=uid, message='\U0001F310 Выберите валюту\n' + '\n'.join(currency),
@@ -160,6 +157,7 @@ def choose_currency(vk, uid):
 
 
 def check_the_currency_selection(vk, uid, text):
+    """валюта. проверяет введенный пользователем номер валюты на корректность, после чего предлагает выбрать период"""
     text = text.rstrip().lstrip()
     try:
         users_data[uid]['currency'] = cur_id[int(text)]
@@ -172,6 +170,7 @@ def check_the_currency_selection(vk, uid, text):
 
 
 def check_date_selection(vk, uid, text):
+    """валюта. проверяет введенный период на корректность, получает данные о курсе за период, создает excel файл"""
     text = text.lstrip().rstrip().lower()
     d = {'неделя': 7, 'месяц': 30, 'год': 365}
     try:
@@ -181,21 +180,22 @@ def check_date_selection(vk, uid, text):
         else:
             date_from, date_to = text.replace('.', '/').split('-')
         data_of_one_curr = data_of_one_curr_for_a_per(date_from, date_to,
-                                                      users_data[uid]['currency'][0])["ValCurs"]["Record"]
+                                                      users_data[uid]['currency'][0])["ValCurs"]["Record"]  # получаем данные о валюте за период
         data_of_one_curr = list(map(lambda x: [x["@Date"], float(x["Value"].replace(',', '.'))], data_of_one_curr))
     except Exception:
         raise DateError
     vk.messages.send(user_id=uid, random_id=get_random_id(), message='подождите, собираю информацию\U0001F50E')
-    name = from_id_to_name(users_data[uid]['currency'][0])
-    code = users_data[uid]['currency'][1]
-    filename = f'{code}_{date_from}_{date_to}'.replace('/', '-') + '.xlsx'
-    data_ = [{'name': code, 'chart_name': name, 'data': data_of_one_curr}]
-    create(data_, filename)
+    name = from_id_to_name(users_data[uid]['currency'][0])  # название валюты
+    code = users_data[uid]['currency'][1]  # код валюты
+    filename = f'{code}_{date_from}_{date_to}'.replace('/', '-') + '.xlsx'  # название файла
+    data_ = [{'name': code, 'chart_name': name, 'data': data_of_one_curr}]  # данные для создания excel
+    create(data_, filename)  # создание excel файла
     users_data[uid]['filename'] = filename
     users_data[uid]['count'] = 1
 
 
 def show_chart(vk, vk_session, uid):
+    """валюта и акции. отправляет excel файл и изображения построенных графиков и возвращает в меню"""
     upload = vk_api.VkUpload(vk_session)
     doc = upload.document_message(f'static/excel/{users_data[uid]["filename"]}', peer_id=uid,
                                   title=users_data[uid]['filename'])['doc']
@@ -209,6 +209,7 @@ def show_chart(vk, vk_session, uid):
 
 
 def show_all(vk, uid):
+    """показывает все доступные валюты и текущий курс и возвращает в меню"""
     message = [flags.get(item["CharCode"][:2], " ") + f'{item["Nominal"]} {item["CharCode"]}' + f' {item["Value"]} ₽'
                for item in data]
     vk.messages.send(user_id=uid, message='текущий курс\n' + '\n'.join(message),
@@ -217,12 +218,14 @@ def show_all(vk, uid):
 
 
 def mailing(vk, uid):
+    """рассылка. главное меню для управления подпиской"""
     vk.messages.send(user_id=uid, message='управление вашей подпиской \U0001F4B8',
                      random_id=get_random_id(), keyboard=generate_keyboard(21).get_keyboard())
     users_data[uid]['state'] = 50
 
 
 def mailing_choose(vk, uid):
+    """рассылка. выводит список всех валют и просит пользователя выбрать валюту для отслеживания изменения курса"""
     message = [str(n + 1) + ' ' + flags.get(item["CharCode"][:2], " ") + f'{item["CharCode"]}' for n, item in
                enumerate(data)]
     vk.messages.send(user_id=uid, message='Об изменении курса какой валюты вам сообщить?\n' + '\n'.join(
@@ -232,6 +235,7 @@ def mailing_choose(vk, uid):
 
 
 def mailing_check_number(vk, uid, text):
+    """рассылка. проверяет корректность введенного номера и предлагает выбрать период для отслеживания"""
     text = text.rstrip().lstrip()
     try:
         users_data[uid]['temporary'] = {}
@@ -244,6 +248,7 @@ def mailing_check_number(vk, uid, text):
 
 
 def mailing_period(vk, uid, text):
+    """рассылка. проверяет корректность выбора периода и предлагает ввести процент изменения"""
     d = {'день': 1, 'неделя': 7}
     text = text.lstrip().rstrip()
     try:
@@ -257,6 +262,7 @@ def mailing_period(vk, uid, text):
 
 
 def mailing_percent(vk, uid, text):
+    """рассылка. проверяет корректность введенного процента и просит подтвердить выбор"""
     text = text.lstrip().rstrip()
     try:
         users_data[uid]['temporary']['percent'] = float(text)
@@ -272,6 +278,7 @@ def mailing_percent(vk, uid, text):
 
 
 def unsubscribe_from_all(vk, uid):
+    """рассылка. отписывает от всех подписок или сообщает, что нет активных подписок, возвращает в меню"""
     res = delete(f'{HOST}/api/user-mailing-lists/{uid}').json()
     if res['success'] == 'OK':
         message = 'вы успешно отписались от всех рассылок'
@@ -283,7 +290,9 @@ def unsubscribe_from_all(vk, uid):
 
 
 def unsubscribe_choose(vk, uid):
-    res = get(f'{HOST}/api/user-mailing-lists/{uid}').json()['items']
+    """рассылка. выводит все подписки пользователя и предлагает ввести номера одной или нескольких подписок,
+       чтобы отписаться или сообщает, что у пользователя нет активных подписок и возвращает в меню"""
+    res = get(f'{HOST}/api/user-mailing-lists/{uid}').json()['items']  # получение всех подписок пользователя
     if res:
         d = {7: 'week', 1: 'day'}
         users_data[uid]['temporary'] = res
@@ -299,6 +308,7 @@ def unsubscribe_choose(vk, uid):
 
 
 def unsubscribe(vk, uid, text):
+    """рассылка. удаляет выбранные пользователем подписки и возвращает в меню"""
     text = text.lstrip().rstrip().split(',')
     items = []
     for item in list(text):
@@ -306,7 +316,7 @@ def unsubscribe(vk, uid, text):
         if item.isdigit():
             items.append(item)
             try:
-                delete(f'{HOST}/api/mailing/{users_data[uid]["temporary"][int(item) - 1]["id"]}').json()
+                delete(f'{HOST}/api/mailing/{users_data[uid]["temporary"][int(item) - 1]["id"]}').json()  # удаление
             except Exception:
                 pass
     if items:
@@ -317,6 +327,7 @@ def unsubscribe(vk, uid, text):
 
 
 def mailing_add_to_db(vk, uid):
+    """рассылка. добавляет подписку и возвращает в меню"""
     post(f'{HOST}/api/mailing',
          json={'currency': users_data[uid]['temporary']['currency'][0],
                'period': users_data[uid]['temporary']['period'],
@@ -335,13 +346,15 @@ def flying_money(vk, uid):
 
 
 def show_stocks(vk, uid):
+    """акции. показывает все доступные акции"""
     vk.messages.send(user_id=uid,
-                     attachment=f'photo-{GROUP_ID}_457239088',
+                     attachment=f'photo-{GROUP_ID}_{IMAGE_ID}',
                      random_id=get_random_id(), keyboard=generate_keyboard(30).get_keyboard())
     users_data[uid]["state"] = 30
 
 
 def stocks_ticker(vk, uid, text):
+    """акции. проверяет корректность введенного тикера и предлагает выбрать период"""
     text = text.rstrip().lstrip().upper()
     if text not in stocks:
         raise MessageError
@@ -353,6 +366,7 @@ def stocks_ticker(vk, uid, text):
 
 
 def stocks_date(vk, uid, text):
+    """акции. проверяет корректность периода, получает информацию за период, формирует excel файл"""
     ticker = users_data[uid]['temporary']['ticker']
     text = text.lstrip().rstrip().lower()
     d = {'неделя': 7, 'месяц': 30, 'год': 365}
@@ -366,24 +380,25 @@ def stocks_date(vk, uid, text):
             datetime.datetime.strptime(date_to, '%d/%m/%Y')
         date_from, date_to = map(lambda x: '-'.join(x.split('/')[::-1]), [date_from, date_to])
         vk.messages.send(user_id=uid, random_id=get_random_id(), message='подождите, собираю информацию\U0001F50E')
-        data_ = yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4]
+        data_ = yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4]  # получение данных
     except Exception as s:
         raise DateError
     open_ = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['Open'].values.tolist()]))
     high = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['High'].values.tolist()]))
     low = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['Low'].values.tolist()]))
     close = list(zip(*[list(map(lambda x: x.strftime('%d/%m/%Y'), data_.index))] + [data_['Close'].values.tolist()]))
-    filename = f"{ticker}_{date_from}_{date_to}".replace('/', '-') + '.xlsx'
+    filename = f"{ticker}_{date_from}_{date_to}".replace('/', '-') + '.xlsx'  # имя файла
     data_ = [{'name': ticker, 'chart_name': ticker + ' Open', 'data': open_},
              {'name': ticker, 'chart_name': ticker + ' High', 'data': high},
              {'name': ticker, 'chart_name': ticker + ' Low', 'data': low},
-             {'name': ticker, 'chart_name': ticker + ' Close', 'data': close}]
-    create(data_, filename=filename)
+             {'name': ticker, 'chart_name': ticker + ' Close', 'data': close}]  # формирование данных для создания excel
+    create(data_, filename=filename)  # создание excel
     users_data[uid]['filename'] = filename
     users_data[uid]['count'] = 4
 
 
 def type_selection(vk, uid, text):
+    """организации. проверяет корректность выбранного типа организации и предлагает выбрать местоположение"""
     text = text.lstrip().rstrip().lower()
     if text not in ['обмен валюты', 'банк', 'банкомат']:
         raise MessageError
@@ -396,16 +411,17 @@ def type_selection(vk, uid, text):
 
 
 def search_for_banks(vk, vk_session, uid, geo):
-    if not geo:
+    """организации. ищет ближайшие к выбранному местоположению, формирует и выводит список"""
+    if not geo:  # проверка было ли выбрано местоположение
         raise GeoError
-    ll = str(geo['coordinates']['longitude']) + ',' + str(geo['coordinates']['latitude'])
+    ll = str(geo['coordinates']['longitude']) + ',' + str(geo['coordinates']['latitude'])  # получение координат
     span = "0.003,0.003"
-    banks = find_businesses(ll, span, users_data[uid]['type'])
+    banks = find_businesses(ll, span, users_data[uid]['type'])  # поиск организаций
     message = []
     pt = [ll + ',home']
     for i in range(len(banks)):
-        pt.append(f'{",".join(list(map(str, banks[i]["geometry"]["coordinates"])))},pm2blm{i + 1}')
-        bank = banks[i]["properties"]["CompanyMetaData"]
+        pt.append(f'{",".join(list(map(str, banks[i]["geometry"]["coordinates"])))},pm2blm{i + 1}')  # добавление метки
+        bank = banks[i]["properties"]["CompanyMetaData"]  # информация об организации
         try:
             hours = bank["Hours"]["text"]
         except Exception:
@@ -417,7 +433,7 @@ def search_for_banks(vk, vk_session, uid, geo):
         message.append('\n'.join(
             [f'{i + 1}. {bank.get("name", "")}', 'Адрес: ' + bank.get("address", ""), 'телефон: ' + phone,
              'режим работы: ' + hours]))
-    if show_map(pt):
+    if show_map(pt):  # получение карты
         upload = vk_api.VkUpload(vk_session)
         photo = upload.photo_messages('static/img/map.png')[0]
         attachment = f'photo{photo["owner_id"]}_{photo["id"]}'
@@ -517,15 +533,15 @@ def main():
                     menu(vk, uid)
                 else:
                     raise MessageError
-            except DateError:
+            except DateError:  # получен некорректный период
                 keyboard = generate_keyboard(users_data[uid]["state"])
                 vk.messages.send(user_id=uid, message='Это не похоже на корректную дату. Попробуй еще раз',
                                  random_id=get_random_id(), keyboard=keyboard.get_keyboard())
-            except GeoError:
+            except GeoError:  # пользователь не выбрал местоположение
                 vk.messages.send(user_id=uid,
                                  message='Пожалуйста, воспользуйся кнопочкой для выбора местоположения\U0001F5FA\U0001F4CD',
                                  random_id=get_random_id(), keyboard=generate_keyboard(71).get_keyboard())
-            except MessageError:
+            except MessageError:  # некорректное сообщение от пользователя
                 keyboard = generate_keyboard(users_data[uid]["state"])
                 vk.messages.send(user_id=uid, message='Я тебя не понимаю. Попробуй еще раз или вернись в меню',
                                  random_id=get_random_id(), keyboard=keyboard.get_keyboard())
@@ -537,16 +553,17 @@ def main():
 
 
 def mailing_main():
+    """рассылка. отправка сообщений пользователям"""
     list_id_curr = [cur_id[i][0] for i in cur_id]
-    week = daily_data_of_all_change(list_id_curr, 7)
-    day = daily_data_of_all_change(list_id_curr, 1)
+    week = daily_data_of_all_change(list_id_curr, 7)  # получение изменения курса за день
+    day = daily_data_of_all_change(list_id_curr, 1)  # получение изменения курса за неделю
     mailing = {1: day, 7: week}
-    all_ = get(f'{HOST}/api/mailing').json()["items"]
+    all_ = get(f'{HOST}/api/mailing').json()["items"]  # получение всех подписок всех пользователей
     vk_session = vk_api.VkApi(token=TOKEN_VK)
     vk = vk_session.get_api()
     d = {1: 'последний день', 7: "последнюю неделю"}
     for item in all_:
-        try:
+        try:  # сравнение изменения курса и изменения, выбранного пользователем
             if float(mailing[item["period"]][item["currency"]]) >= item["percent"] >= 0:
                 message = f"\U00002757 за {d[item['period']]} курс {item['code']} вырос на {mailing[item['period']][item['currency']]}% \U00002757"
                 vk.messages.send(user_id=item['uid'], random_id=get_random_id(), message=message)
@@ -558,6 +575,7 @@ def mailing_main():
 
 
 def load_new_data():
+    """обновление информации о валютах"""
     global data, cur_id
     date = datetime.date.today().strftime('%d/%m/%Y')
     data = daily_data_of_all(date)["ValCurs"]["Valute"]
@@ -572,10 +590,10 @@ def go():
 schedule.every().day.at("06:00").do(load_new_data)
 schedule.every().day.at("12:00").do(load_new_data)
 schedule.every().day.at("18:00").do(load_new_data)
-# schedule.every().day.at("12:10").do(mailing_main)
+# schedule.every().day.at("12:10").do(mailing_main)  # время рассылки
 
-schedule.every().hour.at(":00").do(mailing_main)
-schedule.every().hour.at(":30").do(mailing_main)
+schedule.every().hour.at(":00").do(mailing_main)  # время рассылки
+schedule.every().hour.at(":30").do(mailing_main)  # время рассылки
 t = threading.Thread(target=go)
 t.start()
 

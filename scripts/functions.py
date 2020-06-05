@@ -13,8 +13,6 @@ def xml_to_json(xml_file):
 def daily_data_of_all_change(list_id_curr, period=7):
     dict_of_delta = dict()
     for id_curr in list_id_curr:
-        # date1 = datetime.date(2020, 2, 28).strftime('%d/%m/%Y')
-        # date2 = datetime.date(2020, 3, 28).strftime('%d/%m/%Y')
         date2 = datetime.date.today().strftime('%d/%m/%Y')
         date1 = (datetime.date.today() - datetime.timedelta(days=period)).strftime('%d/%m/%Y')
         a = data_of_one_curr_for_a_per(date1, date2, id_curr)

@@ -1,11 +1,11 @@
 import requests
 from os import getenv
-# from config import API_KEY
 
 API_KEY = getenv("API_KEY", "")
 
 
 def find_businesses(ll, spn, request, locale="ru_RU"):
+    """получение организаций"""
     search_api_server = "https://search-maps.yandex.ru/v1/"
     api_key = API_KEY
     search_params = {
@@ -34,6 +34,7 @@ def find_businesses(ll, spn, request, locale="ru_RU"):
 
 
 def show_map(pt):
+    """создание изображения карты"""
     map_params = {
         "l": "map",
         'pt': '~'.join(pt)
@@ -46,7 +47,7 @@ def show_map(pt):
         print(response.url)
         print("Http статус:", response.status_code, "(", response.reason, ")")
         return False
-    # Запишем полученное изображение в файл.
+    # Записывание полученного изображения в файл.
     map_file = "static/img/map.png"
     try:
         with open(map_file, "wb") as file:
