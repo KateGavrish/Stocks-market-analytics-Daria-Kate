@@ -18,10 +18,8 @@ def daily_data_of_all_change(list_id_curr, period=7):
         a = data_of_one_curr_for_a_per(date1, date2, id_curr)
         try:
             dict_of_delta[id_curr] = str(float(a['ValCurs']['Record'][-1]['Value'].replace(',', '.')) * 100 / float(a['ValCurs']['Record'][0]['Value'].replace(',', '.')) - 100)[:5]
-        except Exception as e:
-            # print(e, 1)
+        except Exception:
             dict_of_delta[id_curr] = 0
-    # print(dict_of_delta)
     return dict_of_delta
 
 

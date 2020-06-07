@@ -23,7 +23,7 @@ from os import mkdir, getenv
 from scripts.parser import parse_news
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = getenv('SECRET_KEY')
+app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -33,7 +33,7 @@ with open('static/static_data/tickers.txt', 'r') as f:
     a = f.readlines()[0].split(',')
 
 
-HOST = getenv("HOST", "")
+HOST = 'https://api-stocks-kate-daria.herokuapp.com/'
 
 
 @login_manager.user_loader
@@ -210,7 +210,7 @@ def download_csv_stocks(filename, ticker, date_from, date_to):
     try:
         yf.download(ticker, start=date_from, end=date_to).iloc[:, 0:4].to_csv('static/excel/chart_csv.csv')
     except Exception as e:
-        print(e)
+        pass
     return send_from_directory('static/excel', filename, as_attachment=True)
 
 
@@ -305,7 +305,6 @@ def user_account():
         list_id_curr = [x[0] for x in list_of_tuples_id_and_name()]
         params = daily_data_of_all(date)["ValCurs"]["Valute"]
         delta = daily_data_of_all_change(list_id_curr)
-        print(params)
     return render_template('account.html', params=params, delta=delta)
 
 
