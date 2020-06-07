@@ -33,7 +33,7 @@ with open('static/static_data/tickers.txt', 'r') as f:
     a = f.readlines()[0].split(',')
 
 
-HOST = 'https://api-stocks-kate-daria.herokuapp.com/'
+HOST = 'https://api-stocks-market.herokuapp.com/'
 
 
 @login_manager.user_loader
