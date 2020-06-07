@@ -53,3 +53,5 @@ api Open exchange rates.
 
 
 Проект развернут на сервере Heroku https://stocks-market-analytics.herokuapp.com
+
+Для локального запуска сайта запустите app.py
